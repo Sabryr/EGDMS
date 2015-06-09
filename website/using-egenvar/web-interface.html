@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-US"><head><!-- Created by Artisteer v4.3.0.60745 -->
+    <meta charset="utf-8">
+    <title>Web interface - Search</title>
+    <meta name="viewport" content="initial-scale = 1.0, maximum-scale = 1.0, user-scalable = no, width = device-width">
+
+    <!--[if lt IE 9]><script src="https://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+    <link rel="stylesheet" href="../style.css" media="screen">
+    <!--[if lte IE 7]><link rel="stylesheet" href="../style.ie7.css" media="screen" /><![endif]-->
+    <link rel="stylesheet" href="../style.responsive.css" media="all">
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Droid+Serif&amp;subset=latin">
+
+
+    <script src="../jquery.js"></script>
+    <script src="../script.js"></script>
+    <script src="../script.responsive.js"></script>
+
+
+<style>.art-content .art-postcontent-0 .layout-item-0 { margin-bottom: 5px;  }
+.art-content .art-postcontent-0 .layout-item-1 { color: #FFFFFF; border-spacing: 10px 0px; border-collapse: separate;  }
+.art-content .art-postcontent-0 .layout-item-2 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #FFFFFF; background: #6D9AB6; padding-right: 10px;padding-left: 10px;  }
+.art-content .art-postcontent-0 .layout-item-3 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #FFFFFF; background: #000000; padding-right: 10px;padding-left: 10px;  }
+.art-content .art-postcontent-0 .layout-item-4 { border-spacing: 10px 0px; border-collapse: separate;  }
+.art-content .art-postcontent-0 .layout-item-5 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #FED3BE; background: #6D9AB6; padding-right: 10px;padding-left: 10px;  }
+.art-content .art-postcontent-0 .layout-item-6 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #FED7C3; background: #000000; padding-right: 10px;padding-left: 10px;  }
+.art-content .art-postcontent-0 .layout-item-7 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #000000; background: #6D9AB6; padding-right: 10px;padding-left: 10px;  }
+.art-content .art-postcontent-0 .layout-item-8 { border-top-style:solid;border-right-style:solid;border-bottom-style:solid;border-left-style:solid;border-top-width:1px;border-right-width:1px;border-bottom-width:1px;border-left-width:1px;border-top-color:#CFD8E2;border-right-color:#CFD8E2;border-bottom-color:#CFD8E2;border-left-color:#CFD8E2; color: #000000; background: #000000; padding-right: 10px;padding-left: 10px;  }
+.ie7 .art-post .art-layout-cell {border:none !important; padding:0 !important; }
+.ie6 .art-post .art-layout-cell {border:none !important; padding:0 !important; }
+
+</style></head>
+<body>
+<div id="art-main">
+<header class="art-header">
+
+    <div class="art-shapes">
+        
+            </div>
+
+<h1 class="art-headline">
+    <a href="/">Data management and advertising for life sciences</a>
+</h1>
+
+
+
+
+
+                        
+                    
+</header>
+<nav class="art-nav">
+    <div class="art-nav-inner">
+    <ul class="art-hmenu"><li><a href="../home.html" class="">Home</a></li><li><a href="../what-does-it-do.html" class="">What does it do ?</a></li><li><a href="../how-does-it-do-it.html" class="">How does it do it?</a></li><li><a href="../download.html" class="">Download</a></li><li><a href="../install.html" class="">Install</a></li><li><a href="../using-egenvar.html" class="active">Using eGenVar</a><ul class="active"><li><a href="../using-egenvar/web-interface.html" class="active">Web interface</a></li><li><a href="../using-egenvar/api-application-program-interface.html">API - Application Program Interface</a></li></ul></li><li><a href="../features.html">Features</a></li><li><a href="../contact-us.html">Contact Us</a></li><li><a href="../demo.html">Demo</a></li></ul> 
+        </div>
+    </nav>
+<div class="art-sheet clearfix">
+            <div class="art-layout-wrapper">
+                <div class="art-content-layout">
+                    <div class="art-content-layout-row">
+                        <div class="art-layout-cell art-content"><article class="art-post art-article">
+                                <h2 class="art-postheader"><span class="art-postheadericon">Web interface - Search</span></h2>
+                                                
+                                <div class="art-postcontent art-postcontent-0 clearfix"><div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-1">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Public Search</h4>
+        <p><span style="font-size: 14px;">This option allows searching through the tags used in the current server and all servers linked to it. The results containd links to get more details</span></p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 50%; text-align: center;" href="#public_search">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Public search - graph browser</h4>
+         
+        <p>The users can load the tags as a graph and visually inspect which ones are used. Once an interesting tag is located it can be further investigated</p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 50%; text-align: left;" href="#graph">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Private search</h4>
+         
+        <p>Registered users can login to access more functions and more details</p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 100%; text-align: left; " href="#private_search">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Reporting data</h4>
+        <p>Automatically extracting metadata from the web-interface is supported only for computers running Unix based OS and has SSH access via port 22</p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 50%; text-align: left;" href="#report">Example</a>
+        </p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-1">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Extract tags from PUBMED&nbsp;</h4>
+        <p><span style="font-size: 14px;">It is possible to highlight tags in an abstract and use these to tag data, people or reports.&nbsp;</span></p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 50%; text-align: left;" href="#pubmed">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>Attache tags from a publication abstract to data used in a publication</h4>
+        <p><span style="font-size: 14px;">This example shows how to create reports referring to a publication and include relevant data to the report.&nbsp;</span></p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 50%; text-align: left;" href="#tagging">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>More examples</h4>
+         
+        <p>More examples and use cases</p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 100%; text-align: left;" href="#example1">Example</a></p><p>
+        </p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <h4>More examples</h4>
+         
+        <p>More examples and use cases</p>
+        <p><a style="background-color: rgb(46, 135, 194); color: white; display: block; height: 100%; line-height: 20px; text-decoration: none; width: 100%; text-align: left;" href="#example1">Example</a></p><p>
+        </p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-1">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-2" style="width: 100%" >
+        <p><br></p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-1">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-3" style="width: 75%" >
+        <div id="public_search"></div><p><img width="98%" alt="" class="art-lightbox" src="../images/public_search.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px;"><br></p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 25%" >
+        <div><h4>Public Search</h4><p></p><ul><li>Each eGenVar server instance can chose to be synchronized with other instances (e.g. eGenVar serverf linking servers of different universities to each other)</li><li>The public search allows users to investigate whether a tag is used without login.&nbsp;<br></li><li>Can search through all the tags synchronized with the server you are connected.</li><li>Tells you whether a tag is used and where more information is available (link to login page of the original server)</li></ul>
+        <p>This screenshot show the search options available when the user is logged in.&nbsp;</p></div>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-5" style="width: 100%" >
+        <p><br></p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-6" style="width: 75%" >
+        <div id="graph"></div><p><img width="98%" alt="" class="art-lightbox" src="../images/graph.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; "><br></p>
+    </div><div class="art-layout-cell layout-item-5" style="width: 25%" >
+        <h4>Public search - graph browser</h4>
+        <div id="graph"><ul><li>Instead of searching for a term the users can browse for available terms using this method.<br></li><li>For example, the user could load the human disease ontology as a graph and expand or collapse nodes using the mouse.&nbsp;</li><li>&nbsp;If a term (a node in the graph) &nbsp;or one of its children is used as a tag, it will be coloured green, otherwise blue.</li><li>Once the user finds the term, the "more details" link in the right click menu will lead to more details and usage of that term as a tag.<br></li></ul><p>
+        </p></div>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-5" style="width: 100%" >
+        <p><br></p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-6" style="width: 75%" >
+        <div id="private_search"><p style="text-align: center;"><img width="98%" alt="" class="art-lightbox" src="../images/Search_with_healp.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; "><br></p></div>
+        <p><span style="font-size: 14px;">In this example the user is searching for files that were generated by experiments using the ‘Infinium HD Assay’. The search term ‘Infinium HD Assay’ was used to search through the tags. The user finds reports with this tags. Subsequently the search results were expanded to get the list of files.</span></p>
+    </div><div class="art-layout-cell layout-item-5" style="width: 25%" >
+        <h4>Private search&nbsp;</h4><ul><li>Registered users can login and get access to a more detailed search page.<br></li><li>Not only tells whether a tag is used, it also allows to investigate results further.</li><li>Can restrict amount of information the user sees using controlling access levels.</li><li>The results are synchronised across all interfaces. E.g. if you perform a search using egenv (command line tool), the results will also be available in the web interface in real time.&nbsp;</li><li>If the exact term to search is not known, then the "All tags" option could be selected to browse through all tagsources.</li></ul>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-7" style="width: 100%" >
+        <p><br></p>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-8" style="width: 75%" >
+        <div id="report">
+        <p><img width="98%" alt="" class="art-lightbox" src="../images/autocreate.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; "><br></p></div>
+    </div><div class="art-layout-cell layout-item-7" style="width: 25%" >
+        <h4>Auto create</h4><ul><li>If the computer containing the data can be accessed using SSH, then this feature can be used to convert existing data arrangements in to eGenVar records.<br></li><li>After connecting to the server, the folder with the files can be selected with "use this location option". Then eGenVar will evaluate the content &nbsp;and perform checksum calculations to show files already recorded and new once.&nbsp;</li></ul>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-8" style="width: 75%" >
+        <div id="pubmed"></div>
+        <p><img width="98%" alt="" class="art-lightbox" src="../images/pubmed_anlyse_tagged.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px;"><br></p>
+    </div><div class="art-layout-cell layout-item-7" style="width: 25%" >
+        <h4>Extract tags from PUBMED</h4><ul><li>The screenshot on the left show the tag investigator. Users can use PUBMED identifiers to investigate possible tags in publications using this option.<br></li><li>The highlighted tags can be clicked to display detials and more options available.</li></ul>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-8" style="width: 75%" >
+        <div id="tagging"></div>
+        <p><img width="98%" alt="" class="art-lightbox" src="../images/Tag_with.png" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px;"><br></p>
+    </div><div class="art-layout-cell layout-item-7" style="width: 25%" >
+        <h4>Attache tags from a publication abstract to data used in a publication</h4><ul><li>First create a report_batch using "create option". Lets name it Tom.</li><li>Second step is to create report using the "Create option". In this example lets assume that the &nbsp;pubmed id is used as the report name. &nbsp;Use Tom as the &nbsp;report_batch .</li><li>Next, use the Tag analyser to load the publications (using the pubmed id).</li><li>Click on a tag.</li><li>&nbsp;Click on the Report link &nbsp;under "tag_with_this" as shown on the left screenshot.</li><li>Select the Report you created, and tag it.</li><li>Then place your data in a folder with the name as the pubmed id and parent folder as Tom. This will help eGenVar to identify the data as belonging to the report we created with the pubmed id,</li><li>Then use the Auto create option explained above to upload file metadata.&nbsp;</li></ul>
+    </div>
+    </div>
+</div>
+</div>
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-4">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-8" style="width: 75%" >
+        <div id="example1">
+        <p style="text-align: center;"><img width="50%" alt="" class="art-lightbox" src="../images/Banner_egenvar.gif" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px;"><br></p></div>
+    </div><div class="art-layout-cell layout-item-7" style="width: 25%" >
+        <h4>More examples</h4><ul><li>&lt;TODO&gt;</li></ul>
+    </div>
+    </div>
+</div>
+</div>
+</div>
+                                
+                
+
+</article></div>
+                    </div>
+                </div>
+            </div>
+    </div>
+<footer class="art-footer">
+  <div class="art-footer-inner">
+<div class="art-content-layout-wrapper layout-item-0">
+<div class="art-content-layout layout-item-1">
+    <div class="art-content-layout-row">
+    <div class="art-layout-cell layout-item-2" style="width: 50%">
+        <p>Copyright © 2014-2019. All Rights Reserved.</p>
+    </div><div class="art-layout-cell layout-item-2" style="width: 50%">
+        <p style="text-align: right;"><a href="#">Privacy Policy</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="#">Terms Of Use</a>&nbsp;&nbsp;&nbsp;&nbsp; <a href="#">About</a></p>
+    </div>
+    </div>
+</div>
+</div>
+
+  </div>
+</footer>
+
+</div>
+
+
+</body></html>
