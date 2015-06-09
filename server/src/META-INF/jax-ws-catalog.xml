@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/home/sabryr/NetBeansProjects/Start_EgenVar1/src/no/ntnu/medisin/egenvar/xml/Authenticate_service.wsdl" uri="wsdl/Authenticate_service.wsdl"/>
+    <system systemId="http://ans-180230.stolav.ntnu.no:8085/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180230.stolav.ntnu.no_8085/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="file:/home/sabryr/NetBeansProjects/egenv/src/no/ntnu/medisin/egenvar/xml/Authenticate_service.wsdl" uri="wsdl/Authenticate_service.wsdl"/>
+</catalog>

@@ -1,0 +1,1537 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package start_egenvar1;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.sql.CallableStatement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.derby.drda.NetworkServerControl;
+import org.glassfish.api.ActionReport;
+import org.glassfish.api.admin.ParameterMap;
+import org.glassfish.api.deployment.DeployCommandParameters;
+import org.glassfish.embeddable.BootstrapProperties;
+import org.glassfish.embeddable.CommandResult;
+import org.glassfish.embeddable.CommandRunner;
+import org.glassfish.embeddable.Deployer;
+import org.glassfish.embeddable.GlassFish;
+import org.glassfish.embeddable.GlassFishException;
+import org.glassfish.embeddable.GlassFishProperties;
+import org.glassfish.embeddable.GlassFishRuntime;
+import org.glassfish.internal.embedded.ContainerBuilder;
+import org.glassfish.internal.embedded.EmbeddedDeployer;
+import org.glassfish.internal.embedded.LifecycleException;
+import org.glassfish.internal.embedded.Server;
+import org.glassfish.jdbc.admin.cli.JDBCConnectionPoolManager;
+import org.glassfish.osgijpa.dd.Persistence.PersistenceUnit.Properties;
+import org.glassfish.resource.common.ResourceConstants;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.ResultSetMetaData;
+import java.sql.Types;
+import java.util.Scanner;
+import javax.servlet.ServletException;
+import org.glassfish.internal.embedded.EmbeddedFileSystem;
+import org.glassfish.internal.embedded.Server.Builder;
+
+/**
+ * Select * from Biological_Ontologies into outfile 'Biological_Ontologies'
+ * FIELDS TERMINATED BY '||' LINES TERMINATED BY '\n'
+ *
+ * @author sabryr
+ */
+public class Start_EgenVar1 {
+
+    private Connection conn_users = null;
+    private Connection conn = null;
+    public static String database_name_users = "EGEN_USERS";
+    public static int port = 1557;
+    private String dbURL_users = "jdbc:derby://localhost:" + port + "/" + database_name_users + ";create=true;user=usermanage;password=VhC6OeDS";
+    public static String database_name_dataEntry = "EGEN_DATAENTRY";
+    private String dbURL_dataEntry = "jdbc:derby://localhost:" + port + "/" + database_name_dataEntry + ";create=true;user=APP;password=APP";
+    private String dbURL_test = "jdbc:derby://localhost:" + port + "/" + database_name_dataEntry + ";create=false;user=test1;password=111";
+    private HashMap<String, HashMap<String, String[]>> key_constraint_map;
+//    private String dbURL = "jdbc:derby://localhost:1527/egen_users;create=true;user=APP;password=APP";
+//    private String dbURL = "jdbc:derby://localhost:1527/APP;create=true;user=APP;password=APP";
+//connect 'jdbc:derby://localhost:1527//APP;create=true;user=APP;password=APP';
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        Start_EgenVar1 main = new Start_EgenVar1();
+        main.commit();
+//        main.createTablesFromFile("/home/sabryr/Documents/DataIntergration/sql/eGenvar/create_tables_egen_dataEntry_simplified_derby.sql");
+    }
+
+    private void commit2() {
+        try {
+            Server.Builder builder = new Server.Builder("test");
+            builder.logger(true);
+            EmbeddedFileSystem.Builder efsb = new EmbeddedFileSystem.Builder();
+            File installDir = new File("/home/sabryr/Desktop/NetBeansProjects/Start_EgenVar1/test/");
+            efsb.installRoot(installDir);
+            EmbeddedFileSystem efs = efsb.build();
+            builder.embeddedFileSystem(efs);
+            Server server = builder.build();
+            server.createPort(8085);
+            try {
+                server.start();
+            } catch (LifecycleException ex) {
+                ex.printStackTrace();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void commit() {
+        try {
+//            java.util.Properties properties = new java.util.Properties();
+            BootstrapProperties bootstrapProperties = new BootstrapProperties();
+//Builder builder = new Server.Builder("");
+//            bootstrapProperties.setProperty("com.sun.enterprise.server.logging.GFFileHandler.file", "/home/sabryr/Desktop/NetBeansProjects/Start_EgenVar1/glassfish/log/log.log");
+//            System.out.println("66 " + bootstrapProperties.getProperties());
+            GlassFishProperties glassfishProperties = new GlassFishProperties();
+            glassfishProperties.setPort("http-listener", 8085);
+            glassfishProperties.setPort("https-listener", 8185);
+            glassfishProperties.setInstanceRoot("/home/sabryr/NetBeansProjects/Start_EgenVar1/egenvar/");
+            GlassFishRuntime glassfishRuntime = GlassFishRuntime.bootstrap(bootstrapProperties);
+            GlassFish glassfish = glassfishRuntime.newGlassFish(glassfishProperties);
+            System.setProperty("java.security.auth.login.config", System.getProperty("com.sun.aas.instanceRoot") + File.separator + "config" + File.separator + "login.conf");
+            Logger.getLogger("").getHandlers()[0].setLevel(Level.WARNING);
+            Logger.getLogger("javax.enterprise.system.tools.deployment").setLevel(Level.WARNING);
+            Logger.getLogger("javax.enterprise.system").setLevel(Level.WARNING);
+
+
+//glassfish.
+
+            glassfish.start();
+//            set_Log(glassfish);
+            startDerby();
+            setAuthentication();
+            createuserTable_usermanagement();
+
+//            adduser("derby.user.app", "111");
+//            adduser("derby.user.APP", "111");
+            installProcedurejar();
+            register_Procedures();
+            call_procedure2();
+
+//            testconnect();
+            createTablesFromFile("/home/sabryr/Documents/DataIntergration/sql/eGenvar/create_tables_egen_dataEntry_simplified_derby.sql");
+//          
+//             createTable("ALTER TABLE EGEN_DATAENTRY.T1 ADD CONSTRAINT cons1 PRIMARY KEY (c1)");
+//            get_key_contraints("PERSON");
+//        
+//////            load_Biological_Ontologies("/home/sabryr/Documents/DataIntergration/Config/Biological_Ontologies.txt");
+
+
+//            ArrayList<String> table_l = getCurrentTables();
+//            System.out.println("87 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("89 " + table_l.get(i));
+//
+//            }
+
+SELECT TABLENAME from SYS.SYSTABLES where SYS.SYSTABLES.TABLETYPE='T' and SYS.SYSTABLES.SCHEMAID=(select SCHEMAID from SYS.SYSSCHEMAS where SYS.SYSSCHEMAS.SCHEMANAME='EGEN_DATAENTRY' AND TABLEID=SYS.SYSCOLUMNS.REFERENCEID);
+
+select ((SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID) || '.' || COLUMNNAME) as name,(SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID), COLUMNNAME,((SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID) || '.' || COLUMNNAME) as fullnam,'Help not available' as helptext from SYS.SYSCOLUMNS WHERE (SELECT TABLENAME from SYS.SYSTABLES where SYS.SYSTABLES.TABLETYPE='T' and SYS.SYSTABLES.SCHEMAID=(select SCHEMAID from SYS.SYSSCHEMAS where SYS.SYSSCHEMAS.SCHEMANAME='EGEN_DATAENTRY') and TABLEID=SYS.SYSCOLUMNS.REFERENCEID) is not null; 
+
+//            ArrayList<String> table_l = executeQuery("select  ((SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID) || '.' || COLUMNNAME) as name,(SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID), COLUMNNAME,((SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID) || '.' || COLUMNNAME) as fullnam,'Help not available' as helptext from SYS.SYSCOLUMNS WHERE (SELECT TABLENAME from SYS.SYSTABLES where SYS.SYSTABLES.TABLETYPE='T' and SYS.SYSTABLES.SCHEMAID=(select SCHEMAID from SYS.SYSSCHEMAS where SYS.SYSSCHEMAS.SCHEMANAME='" + database_name_dataEntry.toUpperCase() + "') and TABLEID=SYS.SYSCOLUMNS.REFERENCEID) is not null ");
+////                      ArrayList<String> table_l = executeQuery("select COLUMNNAME, (SELECT TABLENAME from  SYS.SYSTABLES where TABLEID=SYS.SYSCOLUMNS.REFERENCEID) as TABLE_NAME from SYS.SYSCOLUMNS WHERE (SELECT TABLENAME from SYS.SYSTABLES where SYS.SYSTABLES.TABLETYPE='T' and SYS.SYSTABLES.SCHEMAID=(select SCHEMAID from SYS.SYSSCHEMAS where SYS.SYSSCHEMAS.SCHEMANAME='" + database_name_dataEntry.toUpperCase() +"') and TABLEID=SYS.SYSCOLUMNS.REFERENCEID) is not null ");
+////                        ArrayList<String> table_l = executeQuery("select (TABLENAME ||'.' || COLUMN_NAME) as name ,TABLENAME,COLUMN_NAME,(TABLENAME || '.' || COLUMN_NAME) as fullname, 'Help not available' as helptext  from   SYS.SYSTABLES where TABLETYPE='T' and SCHEMAID=(select SCHEMAID from sys.sysschemas where SCHEMANAME='" + database_name_dataEntry.toUpperCase() + "')");
+//            ArrayList<String> table_l = executeQuery("select SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('derby.user.egen_dataentry' ) as infor,id from "+database_name_dataEntry.toUpperCase()+".person");
+//            System.out.println("142 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("146 " + table_l.get(i));
+//            }
+//            ArrayList<String> table_l = executeQuery_user("select * from " + database_name_users.toUpperCase() + ".USERACCOUNTS");
+//////                     ArrayList<String> table_l = executeQuery("select SCHEMANAME,SCHEMAID from sys.sysschemas");
+//            System.out.println("157 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("158 " + table_l.get(i));
+//
+//            }
+//            String q = "select * from SYS.SYSTABLES where TABLETYPE='T' and SCHEMAID=(select SCHEMAID from sys.sysschemas where SCHEMANAME='" + database_name_dataEntry.toUpperCase() + "')";
+//          ArrayList<String>   table_l = executeQuery(q);
+////                     ArrayList<String> table_l = executeQuery("select SCHEMANAME,SCHEMAID from sys.sysschemas");
+//            System.out.println("141 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("143 " + table_l.get(i));
+//
+//            }
+//            ArrayList<String> table_l = executeQuery_user("select c.constraintname, c.constraintid from sys.systables t, sys.sysconstraints c where t.tablename = '" + database_name_users + ".useraccounts' and t.tableid = c.tableid and c.type = 'U'");
+//////                     ArrayList<String> table_l = executeQuery("select SCHEMANAME,SCHEMAID from sys.sysschemas");
+////              ArrayList<String> table_l = executeQuery_user("CALL SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY('derby.locks.deadlockTimeout')");
+//////          
+//            System.out.println("142 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("144 " + table_l.get(i));
+//
+//            }
+////            table_l = executeQuery("select TABLENAME,SCHEMAID from SYS.SYSTABLES where TABLETYPE='T'");
+//            ArrayList<String> table_l = executeQuery("select SCHEMANAME,SCHEMAID from sys.sysschemas");
+//            System.out.println("98 " + table_l);
+//            for (int i = 0; i < table_l.size(); i++) {
+//                System.out.println("100 " + table_l.get(i));
+//
+//            }
+//            System.out.println("100" + getCurrentTables());
+//
+            //            create_db_connections(glassfish);
+            create_dataEntry_connections_derby(glassfish);
+            create_user_connections_derby(glassfish);
+            File war = new File("/home/sabryr/NetBeansProjects/eGenVar_datamanagement4/dist/eGenVar_datamanagement4.war");
+            Deployer deployer = glassfish.getDeployer();
+            deployer.deploy(war, "--name=eGenVar_datamanagement4", "--contextroot=eGenVar_datamanagement4", "--force=true");
+
+
+//            deployer.undeploy("eGenVar_datamanagement4");
+//            glassfish.stop();
+        } catch (GlassFishException ex) {
+            Logger.getLogger(Start_EgenVar1.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void setAuthentication() {
+        try {
+            getCurrentTables_usermange();
+            Statement s = conn_users.createStatement();
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.connection.requireAuthentication', 'true')");
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider', 'BUILTIN')");
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.user.usermanage', 'VhC6OeDS')");
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.defaultConnectionMode', 'noAccess')");
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.fullAccessUsers', 'usermanage')");
+            s.executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.database.propertiesOnly', 'false')");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void testconnect() {
+        ArrayList<String> result_l = new ArrayList<String>(20);
+        try {
+            Class.forName("org.apache.derby.jdbc.ClientDriver").newInstance();
+            Connection conn_new = DriverManager.getConnection(dbURL_test);
+            try {
+                Statement stmt = conn_new.createStatement();
+                String q = "select * from EGEN_USERS.useraccounts";
+                ResultSet r_1 = stmt.executeQuery(q);
+                while (r_1.next()) {
+                    result_l.add(r_1.getString(1) + " " + r_1.getString(2) + " " + r_1.getString(3) + " " + r_1.getString(4));
+                }
+                r_1.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } catch (Exception except) {
+            except.printStackTrace();
+        }
+        System.out.println("217 " + result_l);
+    }
+
+    private void set_Log(GlassFish glassfish) {
+        try {
+            CommandRunner commandRunner = glassfish.getCommandRunner();
+//            String[] create_pool_usermanage_a = new String[3];
+//            create_pool_usermanage_a[0] = "configs.config.server-config.log-service.file";
+//            create_pool_usermanage_a[1] = "/home/sabryr/Desktop/NetBeansProjects/Start_EgenVar1/glassfish/log/log.log";
+////                  create_pool_usermanage_a[2] = "/home/sabryr/Desktop/NetBeansProjects/Start_EgenVar1/glassfish/log/log.log";
+//            CommandResult commandResult = commandRunner.run("set", create_pool_usermanage_a);
+//            System.out.println("136 " + commandResult.getFailureCause());
+//            System.out.println("137 " + commandResult.getOutput());
+
+//            CommandRunner commandRunner = glassfish.getCommandRunner();
+//            String[] create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "com.sun.enterprise.server.logging.GFFileHandler.file=/home/sabryr/Desktop/NetBeansProjects/Start_EgenVar1/glassfish/log/log.log";
+//            CommandResult commandResult = commandRunner.run("set-log-attributes", create_pool_usermanage_a);
+//            System.out.println("136 " + commandResult.getFailureCause());
+//            System.out.println("137 " + commandResult.getOutput());
+//
+//            commandRunner = glassfish.getCommandRunner();
+//            create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "log-rotation-limit-in-bytes=2000";
+//            commandResult = commandRunner.run("set-log-attributes", create_pool_usermanage_a);
+//            System.out.println("154 " + commandResult.getFailureCause());
+//            System.out.println("155 " + commandResult.getOutput());
+
+//            commandRunner = glassfish.getCommandRunner();
+//            create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "server";
+//            commandResult = commandRunner.run("generate-domain-schema");
+//            System.out.println("161 " + commandResult.getFailureCause());
+//            System.out.println("162 " + commandResult.getOutput());
+//            System.out.println("163 " + System.getProperty("com.sun.aas.instanceRoot"));
+
+//            String[] create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "server";
+//            CommandResult commandResult = commandRunner.run("list-log-attributes", create_pool_usermanage_a);
+//            System.out.println("125 " + commandResult.getFailureCause());
+//            System.out.println("126 " + commandResult.getOutput());
+//            create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "*";
+//           CommandResult   commandResult = commandRunner.run("list-targets" );
+//            System.out.println("125 " + commandResult.getFailureCause());
+//            System.out.println("126 " + commandResult.getOutput());
+
+//            create_pool_usermanage_a = new String[1];
+//            create_pool_usermanage_a[0] = "configs.config.server-config.log-service";
+//            commandResult = commandRunner.run("list", create_pool_usermanage_a);
+//            System.out.println("125 " + commandResult.getFailureCause());
+//            System.out.println("126 " + commandResult.getOutput());
+
+//             commandResult = commandRunner.run("list-commands");
+//             System.out.println("138 " + commandResult.getFailureCause());
+//            System.out.println("139 " + commandResult.getOutput());
+//             String[] create_pool_usermanage_a = new String[2];
+//            create_pool_usermanage_a[0] = "--log-rotation-limit-in-bytes=2000000";
+//            create_pool_usermanage_a[1] = "--file=customelog.log";           
+//            CommandRunner commandRunner = glassfish.getCommandRunner();
+//            CommandResult commandResult = commandRunner.run("create-server-config.log.log-service.module", create_pool_usermanage_a);
+//            System.out.println("134 " + commandResult.getFailureCause());
+//            System.out.println("135 " + commandResult.getOutput());
+//            CommandRunner commandRunner = glassfish.getCommandRunner();
+//            CommandResult commandResult = commandRunner.run("set-log-level", "javax.enterprise.system.container.web=FINE");
+//            System.out.println("125 " + commandResult.getFailureCause());
+//            System.out.println("126 " + commandResult.getOutput());
+        } catch (GlassFishException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void createTablesFromFile(String filename) {
+        ArrayList<String> table_l = getCurrentTables();
+        try {
+            File file = new File(filename);
+            Scanner scan = new Scanner(file);
+            int result = 0;
+            while (scan.hasNext() && result >= 0) {
+                String line = scan.nextLine().trim();
+                if (!line.isEmpty() && line.length() > 12) {
+                    if (line.startsWith("TABLENAME=") && line.contains("==")) {
+                        String table_nm = line.split("==")[0].replace("TABLENAME=", "").trim();
+                        line = line.split("==")[1].trim();
+                        if (!table_l.contains(table_nm.toUpperCase())) {
+                            line = line.replace(";", "");
+                            System.out.print("263 " + line);
+                            result = createTable(line);
+                            System.out.println(" OK");
+                        }
+                    } else {
+//                        System.out.println("no match " + line);
+                    }
+                }
+            }
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+    private void create_user_connections_derby(GlassFish glassfish) {
+        try {
+            //egen_userManagement_resource
+            String[] create_pool_usermanage_a = new String[5];
+            create_pool_usermanage_a[0] = "--datasourceclassname=org.apache.derby.jdbc.ClientDataSource";
+            create_pool_usermanage_a[1] = "--restype=javax.sql.DataSource";
+            create_pool_usermanage_a[2] = "--driverclassname=org.apache.derby.jdbc.ClientDriver";
+            create_pool_usermanage_a[2] = "--property";
+            create_pool_usermanage_a[3] = "databasename=" + database_name_users + ":user=Admin:portnumber=" + port + ":port=" + port + ":password=VhC6OeDS:url=\"jdbc:derby://localhost:" + port + "/" + database_name_users + "\":";
+            create_pool_usermanage_a[4] = "egen_userManagement_pool";
+            CommandRunner commandRunner = glassfish.getCommandRunner();
+            CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("356 " + commandResult.getFailureCause());
+            System.out.println("357 " + commandResult.getOutput());
+            String[] create_resource_usermanage_a = new String[2];
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_userManagement_pool";
+            create_resource_usermanage_a[1] = "egen_userManagement_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("105 " + commandResult.getFailureCause());
+            System.out.println("107 " + commandResult.getOutput());
+
+            String[] create_realm_usermanage_a = new String[4];
+            create_realm_usermanage_a[0] = "--classname=com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm";
+            create_realm_usermanage_a[1] = "--property";
+            create_realm_usermanage_a[2] = "digest-algorithm=\"SHA-1\":user-name-column=username:password-column=password:group-name-column=groupname:group-table=" + database_name_users + ".groups:user-table=" + database_name_users + ".useraccounts:datasource-jndi=egen_userManagement_resource:jaas-context=\"jdbcRealm\"";
+            create_realm_usermanage_a[3] = "UsermangeRealm";
+            commandResult = commandRunner.run("create-auth-realm", create_realm_usermanage_a);
+            System.out.println("113 " + commandResult.getFailureCause());
+            System.out.println("114 " + commandResult.getOutput());
+
+
+
+            //JAVA mail
+            String[] create_mailer_a = new String[6];
+            create_mailer_a[0] = "--from=egenvar@gmail.com";
+            create_mailer_a[1] = "--user=egenvar";
+            create_mailer_a[2] = "--host=smtp.gmail.com";
+            create_mailer_a[3] = "--property";
+            create_mailer_a[4] = "mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory:mail.smtp.password=667f99FO:mail.smtp.auth=true:mail.smtp.socketFactory.fallback=false:mail.smtp.port=465:mail.smtp.socketFactory.port=465";
+            create_mailer_a[5] = "mail/egenvar";
+            commandResult = commandRunner.run("create-javamail-resource", create_mailer_a);
+            System.out.println("161 " + commandResult.getFailureCause());
+            System.out.println("162 " + commandResult.getOutput());
+        } catch (GlassFishException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void create_dataEntry_connections_derby(GlassFish glassfish) {
+        try {
+            //dataEntry_resource
+            String[] create_pool_usermanage_a = new String[5];
+            create_pool_usermanage_a[0] = "--datasourceclassname=org.apache.derby.jdbc.ClientDataSource";
+            create_pool_usermanage_a[1] = "--restype=javax.sql.DataSource";
+            create_pool_usermanage_a[2] = "--driverclassname=org.apache.derby.jdbc.ClientDriver";
+            create_pool_usermanage_a[2] = "--property";
+            create_pool_usermanage_a[3] = "databasename=" + database_name_dataEntry + ":user=APP:portnumber=" + port + ":port=" + port + ":password=APP:create=true:url=\"jdbc:derby://localhost:" + port + "/" + database_name_dataEntry + "\":";
+            create_pool_usermanage_a[4] = "egen_dataEntry_pool";
+            CommandRunner commandRunner = glassfish.getCommandRunner();
+            CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("182 " + commandResult.getFailureCause());
+            System.out.println("184 " + commandResult.getOutput());
+            String[] create_resource_usermanage_a = new String[2];
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataEntry_pool";
+            create_resource_usermanage_a[1] = "egen_dataEntry_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("188 " + commandResult.getFailureCause());
+            System.out.println("189  " + commandResult.getOutput());
+
+
+            create_pool_usermanage_a[3] = "databasename=" + database_name_dataEntry + ":user=APP:portnumber=" + port + ":port=" + port + ":password=APP:create=true:url=\"jdbc:derby://localhost:" + port + "/" + database_name_dataEntry + "\":";
+            create_pool_usermanage_a[4] = "egen_dataView_pool";
+            commandRunner = glassfish.getCommandRunner();
+            commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("358 " + commandResult.getFailureCause());
+            System.out.println("359 " + commandResult.getOutput());
+
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataView_pool";
+            create_resource_usermanage_a[1] = "egen_dataView_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("364" + commandResult.getFailureCause());
+            System.out.println("366 " + commandResult.getOutput());
+
+
+            create_pool_usermanage_a[3] = "databasename=" + database_name_dataEntry + ":user=APP:portnumber=" + port + ":port=" + port + ":password=APP:create=true:url=\"jdbc:derby://localhost:" + port + "/" + database_name_dataEntry + "\":";
+            create_pool_usermanage_a[4] = "egen_dataUpdate_pool";
+            commandRunner = glassfish.getCommandRunner();
+            commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("375 " + commandResult.getFailureCause());
+            System.out.println("376 " + commandResult.getOutput());
+
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataUpdate_pool";
+            create_resource_usermanage_a[1] = "egen_dataUpdate_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("381" + commandResult.getFailureCause());
+            System.out.println("382 " + commandResult.getOutput());
+
+            /*
+             
+             //egen_dataUpdate_resource
+             create_pool_usermanage_a[4] = "user=egendataentry:port=3306:password=k2prrr.N:url=\"jdbc:mysql://localhost:3306/egen_dataEntry\":";
+             create_pool_usermanage_a[5] = "egen_dataUpdate_pool";
+             commandRunner = glassfish.getCommandRunner();
+             commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+             System.out.println("157 " + commandResult.getFailureCause());
+             System.out.println("158 " + commandResult.getOutput());
+
+             create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataUpdate_pool";
+             create_resource_usermanage_a[1] = "egen_dataUpdate_resource";
+             commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+             System.out.println("150" + commandResult.getFailureCause());
+             System.out.println("151 " + commandResult.getOutput());
+             
+             */
+
+        } catch (GlassFishException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void create_db_connections(GlassFish glassfish) {
+        try {
+            //egen_userManagement_resource
+            String[] create_pool_usermanage_a = new String[6];
+            create_pool_usermanage_a[0] = "--datasourceclassname=com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource";
+            create_pool_usermanage_a[1] = "--restype=javax.sql.ConnectionPoolDataSource";
+            create_pool_usermanage_a[2] = "--driverclassname=com.mysql.jdbc.Driver";
+            create_pool_usermanage_a[3] = "--property";
+            create_pool_usermanage_a[4] = "user=usermanage:port=3306:password=VhC6OeDS:url=\"jdbc:mysql://localhost:3306/egen_users\":";
+            create_pool_usermanage_a[5] = "egen_userManagement_pool";
+            CommandRunner commandRunner = glassfish.getCommandRunner();
+            CommandResult commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("103 " + commandResult.getFailureCause());
+            System.out.println("104 " + commandResult.getOutput());
+            String[] create_resource_usermanage_a = new String[2];
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_userManagement_pool";
+            create_resource_usermanage_a[1] = "egen_userManagement_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("105 " + commandResult.getFailureCause());
+            System.out.println("107 " + commandResult.getOutput());
+
+            String[] create_realm_usermanage_a = new String[4];
+            create_realm_usermanage_a[0] = "--classname=com.sun.enterprise.security.auth.realm.jdbc.JDBCRealm";
+            create_realm_usermanage_a[1] = "--property";
+            create_realm_usermanage_a[2] = "digest-algorithm=\"SHA-1\":user-name-column=username:password-column=password:group-name-column=groupname:group-table=egen_users.groups:user-table=egen_users.useraccounts:datasource-jndi=egen_userManagement_resource:jaas-context=\"jdbcRealm\"";
+            create_realm_usermanage_a[3] = "UsermangeRealm";
+            commandResult = commandRunner.run("create-auth-realm", create_realm_usermanage_a);
+            System.out.println("113 " + commandResult.getFailureCause());
+            System.out.println("114 " + commandResult.getOutput());
+
+//            //egen_dataEntry_resource
+            create_pool_usermanage_a[4] = "user=egendataentry:port=3306:password=k2prrr.N:url=\"jdbc:mysql://localhost:3306/" + database_name_dataEntry + "\":";
+            create_pool_usermanage_a[5] = "egen_dataEntry_pool";
+            commandRunner = glassfish.getCommandRunner();
+            commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("130 " + commandResult.getFailureCause());
+            System.out.println("131 " + commandResult.getOutput());
+
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataEntry_pool";
+            create_resource_usermanage_a[1] = "egen_dataEntry_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("136 " + commandResult.getFailureCause());
+            System.out.println("137 " + commandResult.getOutput());
+
+            //egen_dataView_resource
+            create_pool_usermanage_a[4] = "user=egendataview:port=3306:password=k2prrr.N:url=\"jdbc:mysql://localhost:3306/" + database_name_dataEntry + "\":";
+            create_pool_usermanage_a[5] = "egen_dataView_pool";
+            commandRunner = glassfish.getCommandRunner();
+            commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("144 " + commandResult.getFailureCause());
+            System.out.println("145 " + commandResult.getOutput());
+
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataView_pool";
+            create_resource_usermanage_a[1] = "egen_dataView_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("150" + commandResult.getFailureCause());
+            System.out.println("151 " + commandResult.getOutput());
+
+            //egen_dataUpdate_resource
+            create_pool_usermanage_a[4] = "user=egendataentry:port=3306:password=k2prrr.N:url=\"jdbc:mysql://localhost:3306/" + database_name_dataEntry + ":";
+            create_pool_usermanage_a[5] = "egen_dataUpdate_pool";
+            commandRunner = glassfish.getCommandRunner();
+            commandResult = commandRunner.run("create-jdbc-connection-pool", create_pool_usermanage_a);
+            System.out.println("526 " + commandResult.getFailureCause());
+            System.out.println("527 " + commandResult.getOutput());
+
+            create_resource_usermanage_a[0] = "--connectionpoolid=egen_dataUpdate_pool";
+            create_resource_usermanage_a[1] = "egen_dataUpdate_resource";
+            commandResult = commandRunner.run("create-jdbc-resource", create_resource_usermanage_a);
+            System.out.println("150" + commandResult.getFailureCause());
+            System.out.println("151 " + commandResult.getOutput());
+
+
+            //JAVA mail
+            String[] create_mailer_a = new String[6];
+            create_mailer_a[0] = "--from=egenvar@gmail.com";
+            create_mailer_a[1] = "--user=egenvar";
+            create_mailer_a[2] = "--host=smtp.gmail.com";
+            create_mailer_a[3] = "--property";
+            create_mailer_a[4] = "mail.smtp.socketFactory.class=javax.net.ssl.SSLSocketFactory:mail.smtp.password=667f99FO:mail.smtp.auth=true:mail.smtp.socketFactory.fallback=false:mail.smtp.port=465:mail.smtp.socketFactory.port=465";
+            create_mailer_a[5] = "mail/egenvar";
+            commandResult = commandRunner.run("create-javamail-resource", create_mailer_a);
+            System.out.println("161 " + commandResult.getFailureCause());
+            System.out.println("162 " + commandResult.getOutput());
+        } catch (GlassFishException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void startDerby() {
+        try {
+
+            NetworkServerControl server = new NetworkServerControl(InetAddress.getByName("localhost"), port);
+            server.start(null);
+            server.trace(true);
+
+        } catch (Exception ex) {
+            Logger.getLogger(Start_EgenVar1.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void createuserTable_usermanagement() {
+        ArrayList<String> table_l = getCurrentTables_usermange();
+        System.out.println("261 " + table_l);
+        if (!table_l.contains("USERACCOUNTS")) {
+            String create_sql = "CREATE TABLE " + database_name_users + ".useraccounts (id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)  PRIMARY KEY"
+                    + ",create_time TIMESTAMP DEFAULT NULL"
+                    + ",update_time TIMESTAMP DEFAULT NULL"
+                    + ",email varchar(255)"
+                    + ",password varchar(40) NOT NULL"
+                    + ",username varchar(255) DEFAULT NULL"
+                    + ",active_username varchar(255) DEFAULT NULL"
+                    + ",userIP varchar(16) DEFAULT 'NA'"
+                    + ",validated int DEFAULT 0"
+                    + ",allowed_groups varchar(256) DEFAULT ''"
+                    + ",shell varchar(16) DEFAULT '/bin/bash'"
+                    + ",gid int DEFAULT 9999"
+                    + ",uid int DEFAULT 9999"
+                    + ",mobile varchar(16) DEFAULT NULL"
+                    + ",homedir varchar(512) default '/home/galaxy/galaxy-dist/database/files'"
+                    + ",constraint unique_identification unique(username)"
+                    + ")";
+            createTable_users(create_sql);
+        }
+        if (!table_l.contains("GROUPS")) {
+            String create2_sql = "CREATE TABLE " + database_name_users + ".groups (id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)  PRIMARY KEY"
+                    + ",gid int DEFAULT 9999"
+                    + ",groupname varchar(256) DEFAULT NULL"
+                    + ",username varchar(256) DEFAULT NULL"
+                    + ",uid int DEFAULT 9999"
+                    + ")";
+            createTable_users(create2_sql);
+        }
+        if (!table_l.contains("GROUPNMTOGID")) {
+            String create3_sql = "CREATE TABLE " + database_name_users + ".groupnmtoGID( id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)  PRIMARY KEY, "
+                    + "gid int , "
+                    + "groupname varchar(512), "
+                    + "constraint unique_identification2 unique(groupname),"
+                    + "constraint unique_id UNIQUE(gid))";
+            ArrayList<HashMap<String, String>> data_map_l = new ArrayList<HashMap<String, String>>();
+            createTable_users(create3_sql);
+            HashMap<String, String> groupnmtoGID_data_map = new HashMap<String, String>();
+            groupnmtoGID_data_map.put("groupname", "Admin");
+            groupnmtoGID_data_map.put("gid", "1000");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".groupnmtoGID", data_map_l);
+
+            groupnmtoGID_data_map.clear();
+            groupnmtoGID_data_map.put("groupname", "Uploader");
+            groupnmtoGID_data_map.put("gid", "2000");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".groupnmtoGID", data_map_l);
+
+            groupnmtoGID_data_map.clear();
+            groupnmtoGID_data_map.put("groupname", "Editor");
+            groupnmtoGID_data_map.put("gid", "2001");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".groupnmtoGID", data_map_l);
+
+            groupnmtoGID_data_map.clear();
+            groupnmtoGID_data_map.put("groupname", "Deletor");
+            groupnmtoGID_data_map.put("gid", "2003");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".groupnmtoGID", data_map_l);
+
+            groupnmtoGID_data_map.clear();
+            groupnmtoGID_data_map.put("groupname", "Search");
+            groupnmtoGID_data_map.put("gid", "300");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".groupnmtoGID", data_map_l);
+        }
+
+        if (!table_l.contains("SMS")) {
+            String create2_sql = "CREATE TABLE " + database_name_users + ".sms (id int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)  PRIMARY KEY"
+                    + ",username varchar(256)"
+                    + ",password varchar(256)"
+                    + ")";
+            createTable_users(create2_sql);
+            ArrayList<HashMap<String, String>> data_map_l = new ArrayList<HashMap<String, String>>();
+            HashMap<String, String> groupnmtoGID_data_map = new HashMap<String, String>();
+            groupnmtoGID_data_map.put("username", "472f9b49");
+            groupnmtoGID_data_map.put("password", "51e984d8");
+            data_map_l.clear();
+            data_map_l.add(groupnmtoGID_data_map);
+            insertData(database_name_users + ".sms", data_map_l);
+        }
+//        ArrayList<HashMap<String, String>> data_map_l = new ArrayList<HashMap<String, String>>();
+//        HashMap<String, String> data_map = new HashMap<String, String>();
+//        data_map.put("email", "sabryr@gmail.com");
+//        data_map.put("password", "0afbf93cf7560b64b9cb28f2d57baa4159273f44");
+//        data_map.put("username", "sabryr@gmail.com");
+//        data_map.put("active_username", "sabryr@gmail.com");
+//        data_map.put("validated", "1");
+//        data_map.put("allowed_groups", ",2003,2001,3000,2000,");
+//        data_map.put("gid", "10012");
+//        data_map.put("uid", "10012");
+//        data_map_l.add(data_map);
+//        insertData(database_name_users + ".useraccounts", data_map_l);
+    }
+//
+
+    private int createTable(String sql) {
+        int result = -1;
+        try {
+            createConnection();
+            Statement stmt = conn.createStatement();
+            result = stmt.executeUpdate(sql);
+            System.out.println("677 ok " + sql);
+
+        } catch (SQLException ex) {
+            System.out.println("Error 552 " + ex.getMessage() + "\n\t" + sql);
+        }
+        return result;
+    }
+
+    private int createTable_users(String sql) {
+        int result = -1;
+        try {
+            createConnection();
+            Statement stmt = conn_users.createStatement();
+            result = stmt.executeUpdate(sql);
+            System.out.println("691 ok " + sql);
+
+        } catch (SQLException ex) {
+            System.out.println("Error 552 " + ex.getMessage() + "\n\t" + sql);
+        }
+        return result;
+    }
+
+    private void insertData(String table, ArrayList<HashMap<String, String>> data_map) {
+        try {
+            createConnection_usermanage();
+            Statement stmt = conn_users.createStatement();
+            for (int i = 0; i < data_map.size(); i++) {
+                String insert_sql = "INSERT INTO " + table + "";
+                String columnnms = "";
+                String values = "";
+                HashMap<String, String> c_data_map = data_map.get(i);
+                ArrayList<String> clm_nm_l = new ArrayList<String>(c_data_map.keySet());
+                for (int j = 0; j < clm_nm_l.size(); j++) {
+                    String c_nm = clm_nm_l.get(j);
+                    String c_val = c_data_map.get(c_nm);
+                    if (!columnnms.isEmpty()) {
+                        columnnms = columnnms + ",";
+                    }
+                    if (!values.isEmpty()) {
+                        values = values + ",";
+                    }
+                    if (c_val.matches("[0-9]+")) {
+                        values = values + c_val;
+                    } else {
+                        values = values + "'" + c_val + "'";
+                    }
+
+                    columnnms = columnnms + c_nm;
+
+                }
+                insert_sql = insert_sql + "(" + columnnms + ") values(" + values + ")";
+                System.out.println("661 " + insert_sql);
+                int result = stmt.executeUpdate(insert_sql);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
+    private void createConnection_usermanage() {
+        try {
+            if (conn_users == null || conn_users.isClosed()) {
+                Class.forName("org.apache.derby.jdbc.ClientDriver").newInstance();
+                conn_users = DriverManager.getConnection(dbURL_users);
+//                createSchema(database_name_users, "");
+//CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(    'derby.user.sa', 'derbypass')
+            }
+
+        } catch (Exception except) {
+            except.printStackTrace();
+        }
+    }
+
+    private void createConnection() {
+        try {
+            if (conn == null || conn.isClosed()) {
+                Class.forName("org.apache.derby.jdbc.ClientDriver").newInstance();
+                conn = DriverManager.getConnection(dbURL_dataEntry);
+            }
+        } catch (Exception except) {
+            except.printStackTrace();
+        }
+    }
+
+    private void createSchema(String schemaname, String autherised_usesers) {
+        try {
+            String sql = "select SCHEMAID from sys.sysschemas where SCHEMANAME='" + database_name_dataEntry.toUpperCase() + "'";
+            createConnection_usermanage();
+            ResultSet r_1 = conn_users.createStatement().executeQuery(sql);
+            if (r_1.next()) {
+            } else {
+                conn_users.createStatement().executeUpdate("CREATE SCHEMA {" + schemaname + " " + autherised_usesers + "}");
+            }
+        } catch (SQLException ex) {
+        }
+    }
+
+    private void adduser(String usernm, String pass) {
+        try {
+            createConnection_usermanage();
+            if (conn_users != null) {
+
+                conn_users.createStatement().executeUpdate("CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.authentication.provider','BUILTIN')");
+                String call = "CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('" + usernm + "','" + pass + "')";
+                int result = conn_users.createStatement().executeUpdate(call);
+                System.out.println("729 " + result);
+//                CallableStatement cs = conn_users.prepareCall("{" + call + "}");
+//                cs.setString(1, "derby.user." + usernm);
+//                 cs.setString(2, "AA");
+////                cs.registerOutParameter(2, Types.VARCHAR);
+//                cs.executeUpdate();
+//                
+////                System.out.println("711 " + cs.getString(2));
+//                cs.close();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private ArrayList<String> getCurrentTables() {
+        ArrayList<String> result_l = new ArrayList<String>(20);
+        try {
+            createConnection();
+            Statement stmt = conn.createStatement();
+            String q = "select TABLENAME from SYS.SYSTABLES where TABLETYPE='T' and SCHEMAID=(select SCHEMAID from SYS.SYSSCHEMAS where SCHEMANAME='" + database_name_dataEntry.toUpperCase() + "')";
+
+            ResultSet r_1 = stmt.executeQuery(q);
+            while (r_1.next()) {
+                result_l.add(database_name_dataEntry.toUpperCase() + "." + r_1.getString(1));
+            }
+            r_1.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return result_l;
+    }
+
+    private ArrayList<String> getCurrentTables_usermange() {
+        ArrayList<String> result_l = new ArrayList<String>(20);
+        try {
+            createConnection_usermanage();
+            Statement stmt = conn_users.createStatement();
+            String q = "select TABLENAME from SYS.SYSTABLES where TABLETYPE='T' and SCHEMAID=(select SCHEMAID from sys.sysschemas where SCHEMANAME='" + database_name_users.toUpperCase() + "')";
+            ResultSet r_1 = stmt.executeQuery(q);
+            while (r_1.next()) {
+                result_l.add(r_1.getString(1));
+            }
+            r_1.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return result_l;
+    }
+
+    private ArrayList<String> executeQuery(String query) {
+        ArrayList<String> result_l = new ArrayList<String>(20);
+        try {
+            createConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet r_1 = stmt.executeQuery(query);
+            int clm_count = r_1.getMetaData().getColumnCount();
+            while (r_1.next()) {
+                String c_r = "";
+                for (int i = 1; i <= clm_count; i++) {
+                    c_r = c_r + "," + r_1.getMetaData().getColumnName(i) + "=" + r_1.getString(i);
+                }
+                result_l.add(c_r);
+            }
+            r_1.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return result_l;
+    }
+
+    private ArrayList<String> executeQuery_user(String query) {
+        ArrayList<String> result_l = new ArrayList<String>(20);
+        try {
+            createConnection_usermanage();
+            Statement stmt = conn_users.createStatement();
+            ResultSet r_1 = stmt.executeQuery(query);
+            int clm_count = r_1.getMetaData().getColumnCount();
+            while (r_1.next()) {
+                String c_r = "";
+                for (int i = 1; i <= clm_count; i++) {
+                    c_r = c_r + "," + r_1.getMetaData().getColumnName(i) + "=" + r_1.getString(i);
+                }
+                result_l.add(c_r);
+            }
+            r_1.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return result_l;
+    }
+
+    public void call_procedure2() {
+        try {
+            String proc = "call " + database_name_users + ".insert_user(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            CallableStatement cs = conn_users.prepareCall("{" + proc + "}");
+            cs.setString(1, database_name_users + ".spliter_SplitValues");
+            cs.setString(2, database_name_users + ".useraccounts");
+            cs.setString(3, database_name_users + ".groupnmtoGID");
+            cs.setString(4, database_name_users + ".groups");
+            cs.setString(5, "sabryr@gmail.com");
+            cs.setString(6, "sabryr@gmail.com");
+            cs.setString(7, "sabryr@gmail.com");
+            cs.setString(8, "123");
+            cs.setString(9, ",");
+            cs.setString(10, "admin, Uploader,Editor,Deletor");
+            cs.setInt(11, 1);
+            cs.setString(12, "0.0.0.0");
+            cs.setString(13, "99999");
+            cs.setString(14, database_name_users + ".SHA1");
+            cs.registerOutParameter(15, Types.VARCHAR);
+            cs.executeUpdate();
+            System.out.println("512 " + cs.getString(15));
+            cs.close();
+
+//            cs.setString(1, "sabrysplace@yahoo.com");
+//            cs.setString(2, "sabrysplace@yahoo.com");
+//            cs.setString(3, "sabrysplace@yahoo.com");
+//            cs.setString(4, "123");
+//            cs.setString(5, ",");
+//            cs.setString(6, "admin, Uploader");
+//            cs.setInt(7, 1);
+//            cs.setString(8, "0.0.0.0");
+//            cs.setString(9, "99999");
+//            cs.registerOutParameter(10, Types.VARCHAR);
+//            cs.executeUpdate();
+//            System.out.println("527 " + cs.getString(10));
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void register_Procedures() {
+
+        Statement stmt = null;
+        String query_SplitValues =
+                "CREATE PROCEDURE  " + database_name_users + ".spliter_SplitValues(in table_nm VARCHAR(32),in tosplit VARCHAR(2048), in delimiter VARCHAR(8), out  VARCHAR(2048)) "
+                + "PARAMETER STYLE JAVA "
+                + "LANGUAGE JAVA "
+                + "DYNAMIC RESULT SETS 0 "
+                + "EXTERNAL NAME 'derby.egenv.medisin.ntnu.no.Procedures_eGenv_JAVADB.spliter_SplitValues'";
+        String query_insert_user =
+                "CREATE PROCEDURE  " + database_name_users + ".insert_user("
+                + "spliter_SplitValues_proc_name varchar(64),"
+                + "useraaccounts_table varchar(255),"
+                + "groupnmtoGID_tbl varchar(255),"
+                + "group_table varchar(255),"
+                + "username_inactive varchar(255),"
+                + "username varchar(255),"
+                + "email varchar(255),"
+                + "new_password varchar(40),"
+                + "delimiter varchar(8),"
+                + "allowed_groups varchar(512), "
+                + "validated int, "
+                + "userIP varchar(16),"
+                + "mobile varchar(16),"
+                + "shaprocedure_name varchar(255),"
+                + "OUT result varchar(128)) "
+                + "PARAMETER STYLE JAVA "
+                + "LANGUAGE JAVA "
+                + "DYNAMIC RESULT SETS 0 "
+                + "EXTERNAL NAME 'derby.egenv.medisin.ntnu.no.Procedures_eGenv_JAVADB.insert_user'";
+
+        String sha1_function = "CREATE FUNCTION  " + database_name_users + ".sha1(intext VARCHAR(64)) RETURNS CHAR(40)"
+                + " PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA"
+                + " EXTERNAL NAME  'derby.egenv.medisin.ntnu.no.Procedures_eGenv_JAVADB.sha1'";
+        try {
+            createConnection_usermanage();
+            stmt = conn_users.createStatement();
+            stmt.execute("DROP PROCEDURE " + database_name_users + ".SPLITER_SPLITVALUES");
+            stmt.execute("DROP PROCEDURE " + database_name_users + ".INSERT_USER");
+            stmt.execute("DROP FUNCTION " + database_name_users + ".sha1");
+            stmt.close();
+        } catch (SQLException e) {
+//            e.printStackTrace();
+        }
+        try {
+            stmt = conn_users.createStatement();
+            stmt.execute(query_SplitValues);
+            stmt.execute(query_insert_user);
+            stmt.execute(sha1_function);
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void installProcedurejar() {
+        try {
+            CallableStatement cs2 = null;
+            CallableStatement cs3 = null;
+            String query1 = "CALL sqlj.install_jar('/home/sabryr/NetBeansProjects/Procedures_eGenv_JAVADB/dist/Procedures_eGenv_JAVADB.jar','" + database_name_users + ".Procedures_eGenv_JAVADB',0)";
+            String query2 = "CALL sqlj.replace_jar('/home/sabryr/NetBeansProjects/Procedures_eGenv_JAVADB/dist/Procedures_eGenv_JAVADB.jar','" + database_name_users + ".Procedures_eGenv_JAVADB')";
+            createConnection_usermanage();
+            try {
+//                cs2 = conn_users.prepareCall("CALL SYSCS_UTIL.SYSCS_GET_DATABASE_PROPERTY(?,?)");
+//                cs2.setString(1, "derby.locks.deadlockTimeout");
+//                cs2.registerOutParameter(2, Types.VARCHAR);
+//                cs2.execute();
+//                System.out.println("932 " + cs2.getString(2));
+                System.out.println("Calling " + query2);
+                cs2 = conn_users.prepareCall(query1);
+                cs2.execute();
+            } catch (SQLException e2) {
+                System.out.println("982 " + e2.getMessage());
+            }
+            try {
+                cs2 = conn_users.prepareCall(query2);
+                cs2.execute();
+            } catch (SQLException e2) {
+                e2.printStackTrace();
+            } finally {
+                if (cs2 != null) {
+                    cs2.close();
+                }
+            }
+            String procedure_name = "Procedures_eGenv_JAVADB";
+            String query3 = "CALL syscs_util.syscs_set_database_property('derby.database.classpath','" + database_name_users + ".Procedures_eGenv_JAVADB')";
+            try {
+                System.out.println("Calling " + query3);
+                cs3 = conn_users.prepareCall(query3);
+                cs3.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                if (cs3 != null) {
+                    cs3.close();
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private HashMap<String, String[]> get_key_contraints(String current_tbl_nm) {
+        if (key_constraint_map == null) {
+            key_constraint_map = new HashMap<String, HashMap<String, String[]>>();
+        }
+        HashMap<String, String[]> returning_map = new HashMap<String, String[]>(1);
+        if (current_tbl_nm != null && !current_tbl_nm.isEmpty() && !current_tbl_nm.equalsIgnoreCase("null") && !key_constraint_map.containsKey(current_tbl_nm)) {
+            get_key_contraints_unique_identification(current_tbl_nm);
+            get_key_contraints_column_info(current_tbl_nm);
+            try {
+                try {
+                    createConnection();
+                    if (!conn.isClosed()) {
+                        DatabaseMetaData metaData = conn.getMetaData();
+                        ResultSet key_result = metaData.getImportedKeys(conn.getCatalog(), database_name_dataEntry.toUpperCase(), current_tbl_nm);
+                        while (key_result.next()) {
+                            String[] tmp_a = new String[3];
+                            tmp_a[0] = key_result.getString("FKCOLUMN_NAME");//column_name
+                            tmp_a[1] = key_result.getString("PKTABLE_NAME");//ref_tblm
+                            tmp_a[2] = key_result.getString("PKCOLUMN_NAME");//ref_tbl_clm_nm 
+                            returning_map.put(tmp_a[0], tmp_a);
+
+                        }
+                        key_constraint_map.put(current_tbl_nm, returning_map);
+                    }
+                    conn.close();
+                } catch (SQLException e) {
+                    System.out.println("Error 8767" + e.getMessage());
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return returning_map;
+        } else if (key_constraint_map.containsKey(current_tbl_nm)) {
+            return key_constraint_map.get(current_tbl_nm);
+        }
+        return returning_map;
+    }
+
+    private String[] get_key_contraints_unique_identification(String current_tbl_nm) {
+        String[] uniq_to_user_a = new String[1];
+        if (current_tbl_nm != null && !current_tbl_nm.isEmpty() && !current_tbl_nm.equalsIgnoreCase("null") && !key_constraint_map.containsKey(current_tbl_nm)) {
+            try {
+                createConnection();
+
+                if (!conn.isClosed()) {
+                    DatabaseMetaData metaData = conn.getMetaData();
+                    String catalog = conn.getCatalog();
+                    ResultSet key_result = metaData.getIndexInfo(catalog, database_name_dataEntry.toUpperCase(), current_tbl_nm, false, false);//.getImportedKeys(ncon.getCatalog(), Constants.DATABASE_NAME_DATA, current_tbl_nm);
+                    ArrayList<String> uniqs_list = new ArrayList<String>(1);
+                    int cc = key_result.getMetaData().getColumnCount();
+                    String out = "";
+                    for (int i = 0; i < cc; i++) {
+                        out = out + "\t" + key_result.getMetaData().getColumnName(i + 1);
+                    }
+                    System.out.println("909 " + out);
+
+//                    while (key_result.next()) {
+//                        String indexName = key_result.getString(6);
+//                        String indexColumnName = key_result.getString(9);
+//                        System.out.println("897 " + indexName + "  " + indexColumnName);
+//                    }
+                    while (key_result.next()) {
+                        String index_name = key_result.getString("INDEX_NAME");
+                        if (index_name != null) {
+                            index_name = index_name.toUpperCase();
+                            if (index_name.startsWith("UNIQUE_IDENTIFICATION")) {
+                                uniqs_list.add(key_result.getString("COLUMN_NAME"));
+                            }
+                        }
+                    }
+                    if (!uniqs_list.isEmpty()) {
+                        uniq_to_user_a = new String[uniqs_list.size()];
+                        for (int i = 0; i < uniq_to_user_a.length; i++) {
+                            uniq_to_user_a[i] = uniqs_list.get(i);
+                        }
+                    }
+                    key_result.close();
+                }
+                conn.close();
+            } catch (SQLException e) {
+                System.out.println("Error 8767" + e.getMessage());
+            }
+        }
+        return uniq_to_user_a;
+    }
+
+    private HashMap<String, Integer> get_key_contraints_column_info(String current_tbl_nm) {
+        HashMap<String, Integer> column_details = new HashMap<String, Integer>();
+        if (current_tbl_nm != null && !current_tbl_nm.isEmpty() && !current_tbl_nm.equalsIgnoreCase("null") && !key_constraint_map.containsKey(current_tbl_nm)) {
+            try {
+                createConnection();
+                if (!conn.isClosed()) {
+                    DatabaseMetaData metaData = conn.getMetaData();
+                    ResultSet key_result = metaData.getColumns(null, database_name_dataEntry.toUpperCase(), current_tbl_nm, null);
+                    int cc = key_result.getMetaData().getColumnCount();
+                    String out = "";
+                    for (int i = 0; i < cc; i++) {
+                        out = out + "\t" + key_result.getMetaData().getColumnName(i + 1);
+                    }
+                    System.out.println(out);
+                    while (key_result.next()) {
+                        String typename = key_result.getString("TYPE_NAME");
+                        if (typename.equalsIgnoreCase("VARCHAR")) {
+                            String name = key_result.getString("COLUMN_NAME");
+                            int size = key_result.getInt("COLUMN_SIZE");
+                            column_details.put(name, size);
+                        }
+                    }
+                }
+                conn.close();
+            } catch (SQLException e) {
+                System.out.println("Error 8767" + e.getMessage());
+            }
+        }
+        return column_details;
+    }
+
+    private void load_Biological_Ontologies(String filenm) {
+        ///home/sabryr/Documents/DataIntergration/Config/Biological_Ontologies.txt
+        //TABLENAME=egen_dataEntry.Biological_Ontologies==
+        ArrayList<String> ctables_l = getCurrentTables();
+        System.out.println("1026 " + ctables_l);
+        if (!ctables_l.contains("" + database_name_dataEntry + ".BIOLOGICAL_ONTOLOGIES")) {
+            File file = new File(filenm);
+            if (file.isFile() && file.canRead()) {
+                try {
+                    createConnection();
+                    try {
+                        if (!conn.isClosed()) {
+                            int result = conn.createStatement().executeUpdate("CREATE TABLE " + database_name_dataEntry + ".Biological_Ontologies (id  int NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1)  PRIMARY KEY,name varchar(256),obo_id varchar(256),parent_id int,  namespace varchar(256),is_a varchar(256) ,definition varchar(2048), relationship  varchar(2048))");
+                            String sql = "insert into " + database_name_dataEntry + ".Biological_Ontologies(name,obo_id,parent_id,namespace,is_a,definition,relationship) values(?,?,?,?,?,?,?)";
+                            PreparedStatement p_1 = conn.prepareStatement(sql);
+                            Scanner scan = new Scanner(file);
+                            int saftey = 0;
+                            while (scan.hasNext() && result >= 0 && saftey < 10) {
+                                saftey++;
+                                String line = scan.nextLine().trim();
+                                System.out.println("1042 " + line);
+                                if (!line.isEmpty() && !line.startsWith("#")) {
+                                    String[] split = line.split("\\|\\|");
+                                    if (split.length == 8 && split[3].trim().matches("[0-9\\-]+")) {
+                                        p_1.setString(1, split[1].trim());
+                                        p_1.setString(2, split[2].trim());
+                                        p_1.setInt(3, new Integer(split[3].trim()));
+                                        p_1.setString(4, split[4].trim());
+                                        p_1.setString(5, split[5].trim());
+                                        p_1.setString(6, split[6].trim());
+                                        p_1.setString(7, split[7].trim());
+                                        result = p_1.executeUpdate();
+                                    }
+                                }
+                            }
+                            result = conn.createStatement().executeUpdate("CREATE INDEX parent_indx1 ON " + database_name_dataEntry + ".BIOLOGICAL_ONTOLOGIES(parent_id)");
+                            if (result >= 0) {
+                                System.out.println("1058 indexing success");
+                            } else {
+                                System.out.println("1060 indexing failed");
+                            }
+
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+
+                } catch (FileNotFoundException ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                System.out.println("Error : can not read " + filenm);
+            }
+        }
+
+    }
+}
+
+
+
+    /*
+     * methiod 75
+     */
+    private void createTag2(String dir_for_placing_prep_files) {
+        List from_db_list = getforQuery("select concat( description,'==', sqltocreatetemplate,'==',table_nm) from ontologytypes", true, "75");
+//        List from_db_list = advancedQueryHandler("ontologytypes.id", "ontologytypes.returning_string", false, false, false, false, false);
+//        List from_db_list = advancedQueryHandler("ontologytypes.id", "ontologytypes.table_nm,starting_parent_id,description", false, false, false, false, false);
+        System.out.println(" 4918 " + from_db_list);
+        if (from_db_list != null) {
+            ArrayList<String> reoport_type_l = new ArrayList<String>(from_db_list);
+            HashMap<String, String> result_map = new HashMap<String, String>();
+            for (int i = 0; i < reoport_type_l.size(); i++) {
+                String[] split_a = reoport_type_l.get(i).split("==");
+                System.out.println("4923 " + reoport_type_l.get(i));
+                for (int j = 0; j < split_a.length; j++) {
+                    System.out.println("\n 4925 " + split_a[j]);
+
+                }
+                if (split_a.length >= 3) {
+                    result_map.put(split_a[0], split_a[1] + "===" + split_a[2]);
+                } else {
+                    result_map.put(split_a[0], split_a[1]);
+                }
+            }
+            boolean ok = false;
+            if (!result_map.isEmpty()) {
+                ArrayList<String> map_key_l = new ArrayList<String>(result_map.keySet());
+                String user_selection = getUserSelection(map_key_l, "What type of tag do you want to create?");
+                String seed_query = result_map.get(user_selection);
+                System.out.println("4940 " + seed_query);
+                String path = user_selection;
+                String final_ref = "";
+                if (seed_query != null && !seed_query.isEmpty()) {
+                    boolean comleted = false;
+                    int safety = 25;
+                    while (!comleted && safety > 0) {
+                        safety--;
+                        if (seed_query != null) {
+                            String c_table = null;
+                            if (seed_query.contains("===")) {
+                                c_table = seed_query.split("===")[1];
+                                seed_query = seed_query.split("===")[0];
+                            }
+                            List tmp_from_db_list = getforQuery(seed_query, true, "75");
+                            if (tmp_from_db_list != null) {
+                                HashMap<String, String> tmp_result_map = new HashMap<String, String>();
+                                ArrayList<String> tmp_reoport_type_l = new ArrayList<String>(tmp_from_db_list);
+                                for (int i = 0; i < tmp_reoport_type_l.size(); i++) {
+                                    if (tmp_reoport_type_l.get(i).contains("|")) {
+                                        String label = tmp_reoport_type_l.get(i).split("\\|")[0];
+                                        String quary_const = tmp_reoport_type_l.get(i).split("\\|")[1];
+                                        final_ref = quary_const;
+                                        if (c_table != null) {
+                                            if (quary_const.contains("=")) {
+                                                if (c_table.equals(quary_const.split("=")[0])) {
+                                                    quary_const = "SELECT concat(name,'|" + quary_const.split("=")[0] + "=',id) from " + quary_const.split("=")[0] + " where " + quary_const.split("=")[0] + ".parent_id=" + quary_const.split("=")[1];
+
+                                                } else {
+                                                    quary_const = "SELECT concat(name,'|" + quary_const.split("=")[0] + "=',id) from " + quary_const.split("=")[0] + " where " + quary_const.split("=")[0] + ".parent_id=0 and " + c_table + "_id=" + quary_const.split("=")[1];
+                                                }
+                                            }
+
+                                        } else {
+                                            if (quary_const.contains("=")) {
+                                                quary_const = "SELECT concat(name,'|" + quary_const.split("=")[0] + "=',id) from " + quary_const.split("=")[0] + " where " + quary_const.split("=")[0] + ".parent_id=" + quary_const.split("=")[1];
+                                            }
+                                        }
+                                        if (quary_const.contains("=")) {
+                                            tmp_result_map.put(label, quary_const);
+                                        }
+                                    }
+                                }
+                                ArrayList<String> tmp_map_key_l = new ArrayList<String>(tmp_result_map.keySet());
+                                String user_selection2 = getUserSelection(tmp_map_key_l, "What type of " + user_selection + " is it?");
+                                path = path + "_" + user_selection2;
+                                seed_query = tmp_result_map.get(user_selection2);
+                                user_selection = user_selection + "=>" + user_selection2;
+                            } else {
+                                comleted = true;
+                                //get the next table
+                            }
+                        } else {
+                            comleted = true;
+                            //get the next table
+                        }
+                    }
+
+                } else {
+                    System.out.println("Error 75C: Communication failer.");
+                }
+
+                ArrayList<String> possible_tables_l = new ArrayList<String>();
+                possible_tables_l.add("files");
+                possible_tables_l.add("report");
+                possible_tables_l.add("report_batch");
+                String selected_table = getUserSelection(possible_tables_l, "What is the target to attach the tag?");
+                String selected_property_table = selected_table + "2properties";
+                HashMap<String, String> overide_map = new HashMap<String, String>();
+
+                int name_length = 32;
+                if (path.length() - name_length < 0) {
+                    name_length = 0;
+                }
+                overide_map.put("COLUMN=" + selected_property_table + ".link_to_feature", final_ref);
+                overide_map.put("COLUMN=" + selected_property_table + ".name", path.substring(path.length() - name_length, path.length()).replaceAll("\\s", "_").replaceAll(">", "_").replaceAll("=", "") + "_" + final_ref);
+                String ans = getuserInputSameLine("Type a short description and press enter, type NA or just press enter to describe this later.", "Description: ");
+                if (ans == null || ans.trim().isEmpty() || ans.trim().equalsIgnoreCase("NA")) {
+                    ans = " <add your discription here>";
+                }
+
+                overide_map.put("COLUMN=" + selected_property_table + ".description", path + " " + ans);
+                overide_map.put("name", final_ref);
+                overide_map.put(selected_property_table + ".link_to_feature", final_ref);
+                overide_map.put(selected_property_table + ".name", path.substring(path.length() - name_length, path.length()).replaceAll("\\s", "_").replaceAll(">", "_").replaceAll("=", "") + "_" + final_ref);
+                overide_map.put(selected_property_table + ".description", path + " " + ans);
+
+                possible_tables_l.clear();
+                possible_tables_l.add("Yes, perform a search now");
+                possible_tables_l.add("Do not search. (Add the " + selected_table + " values manually)");
+                String user_selection_do_search = getUserSelection(possible_tables_l, "Do you want to search and add the " + selected_table + " now ?");
+                HashMap<String, ArrayList<String>> fromsearch_map = new HashMap<String, ArrayList<String>>();
+                if (user_selection_do_search.equals("Yes, perform a search now")) {
+                    boolean exit_search = false;
+                    while (!exit_search) {
+                        String seach_term = getuserInputSameLine("Enter the name/names of the " + selected_table, "Search for: ");
+                        List search_results_l = advancedQueryHandler(selected_table + ".name=" + seach_term, selected_table + ".name", false, false, false, false, false, false);
+                        if (search_results_l == null || search_results_l.isEmpty()) {
+                            if (!getuserInputSameLine("No match for  " + seach_term + " Do you want to search with a nother term ", " Y (search again) | N (do not search) ").equalsIgnoreCase("Y")) {
+                                exit_search = true;
+                            }
+                        } else {
+                            fromsearch_map.put(selected_table + ".name", new ArrayList<String>(search_results_l));
+
+                            exit_search = true;
+                        }
+
+                    }
+                }
+
+                prepareTemplate(selected_property_table, dir_for_placing_prep_files, false, false, overide_map, fromsearch_map);
+            } else {
+                System.out.println("Error 75B: Communication failer. Can not connect to server.");
+            }
+        } else {
+            System.out.println("Error 75A: Communication failer. Can not connect to server.");
+        }
+    }
+
+
+//    private void setGlashFishConfig(GlassFish glassfish) {
+//        try {
+////            String[] config_a = new String[5];
+////              config_a[0] = "--datasourceclassname=" + instruct_map.get(DATASOURCECLASSNAME_FLAG);
+//
+//            CommandRunner commandRunner = glassfish.getCommandRunner();
+//            CommandResult commandResult = commandRunner.run("create-jvm-options", "-Xms1024m");
+//            commandRunner = glassfish.getCommandRunner();
+//            commandResult = commandRunner.run("create-jvm-options", "-Xmx1024m");
+//            commandRunner = glassfish.getCommandRunner();
+//            commandResult = commandRunner.run("create-jvm-options", "-Djavax.net.ssl.keyStore=/home/sabryr/tmp/server/egenvar/config/egenkystore");
+//            System.out.println("\n\n\n\n");
+//            System.out.println("482 " + commandResult.getOutput());
+//            System.out.println("482 " + commandResult.getFailureCause());
+//            System.out.println("\n\n\n\n");
+//        } catch (GlassFishException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
+
+     * //               glassfishProperties.setProperty("embedded-glassfish-config.server.java-config.jvm-options", "-Djavax.net.ssl.keyStore=/home/sabryr/tmp/server/egenvar/config/egenkystore");
+     //            glassfishProperties.setProperty("configs.config.server-config.web-container.jsp-caching-enabled", "true");
+     //   glassfishProperties.setProperty("configs.config.server-config.java-config.jvm-options", "-Djavax.net.ssl.keyStore=/home/sabryr/tmp/server/egenvar/config/egenkystore");
+
+     //            embedded-glassfish-config.server.java-config.jvm-options.Djavax.net.ssl.keyStore=/home/sabryr/tmp/server/egenvar/config/egenkystore
+     //            embedded-glassfish-config.server.network-config.network-listeners.network-listener.http-listener.enabled=true
+
+     //System.exit(1);
+
+
+<%@page import="java.util.ArrayList"%>
+<%@page import="java.util.HashMap"%>
+<%@page import="java.io.IOException"%>
+<%@page import="java.io.StreamCorruptedException"%>
+<%@page import="java.io.ObjectInputStream"%>
+<%@page import="java.io.FileInputStream"%>
+<%@page import="java.io.File"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
+<%-- 
+    Document   : Visualizer
+    Created on : Sep 30, 2013, 10:20:36 AM
+    Author     : sabryr
+typeof split_a.length === "undefined"
+var name ='http://ans-180228.stolav.ntnu.no:8085/'+ jQuery.url.param("name");
+<script type="text/javascript">
+            function drawVisualization() {
+                
+                var wrapper = new google.visualization.ChartWrapper({
+                    dataSourceUrl: 'http://ans-180228.stolav.ntnu.no:8085/_graph',
+                    chartType: 'OrgChart',
+                    containerId: 'visualization'
+                });
+                wrapper.draw();
+
+            }
+            google.setOnLoadCallback(drawVisualization);
+        </script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript">
+            var queryObject = "";
+            var queryObjectLen = "";
+            $.ajax({
+                type: 'POST',
+                url: 'https://ans-180228.stolav.ntnu.no:8185/eGenVar_web/Jason_test',
+                dataType: 'json',
+                success: function(data) {
+                    queryObject = eval('(' + JSON.stringify(data) + ')');
+                    queryObjectLen = queryObject.studDetails.length;
+                },
+                error: function(xhr, type) {
+                    alert('server error occoured')
+                }
+            });
+            var arrdata = "";
+            google.load("visualization", "1", {packages: ["corechart"]});
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+                arrdata = new google.visualization.DataTable();
+                arrdata.addColumn('string', 'Names');
+                arrdata.addColumn('number', 'Physics');
+                arrdata.addColumn('number', 'Chemistry');
+                arrdata.addColumn('number', 'Biology');
+                 arrdata.addRows([["B", 50, 10, 15]]);
+                for (var i = 0; i < queryObjectLen; i++) {
+                    var studname = queryObject.studDetails[i].studname;
+                    var physics = queryObject.studDetails[i].physics;
+                    var chemistry = queryObject.studDetails[i].chemistry;
+                    var biology = queryObject.studDetails[i].biology;
+                    arrdata.addRows([
+                        [studname, parseInt(physics), parseInt(chemistry), parseInt(biology)]
+                    ]);
+                }
+                var options = {
+                    title: 'Students Performance'
+                };
+                var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+                chart.draw(arrdata, options);
+            }
+        </script>
+    <a href="javascript:sayHello();">Say Hello</a><br />
+ data.addRow(i, c_grpah_data[1], c_grpah_data[2]);
+  <script type='text/javascript' src='https://www.google.com/jsapi'></script>
+        <script type="text/javascript">
+            google.load("visualization", "1", {'packages': ["corechart"]});
+        </script>
+        <script type='text/javascript'>
+            google.load('visualization', '1', {packages: ['orgchart']});
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Name');
+                data.addColumn('string', 'Manager');
+                data.addColumn('string', 'ToolTip');
+                data.addRows([
+                    ['A', '', 'A'],
+                    ['B', 'A', 'B']
+                ]);
+                var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+                chart.draw(data, {allowHtml: true});
+            }
+        </script>
+
+
+        <script type='text/javascript'>
+            function getXmlHttpRequestObject() {
+                if (document.getElementById('div_1') != null) {
+                    document.getElementById('div_1').innerHTML = "85";
+                }
+
+                if (window.XMLHttpRequest) {
+                    return new XMLHttpRequest(); //Not IE
+                } else if (window.ActiveXObject) {
+                    return new ActiveXObject("Microsoft.XMLHTTP"); //IE
+                } else {
+                    alert("Your browser doesn't support the XmlHttpRequest object.  Better upgrade to Firefox.");
+                }
+            }
+            var receiveReq = getXmlHttpRequestObject();
+            function sayHello() {
+                if (receiveReq.readyState == 4 || receiveReq.readyState == 0) {
+                    receiveReq.open("GET", 'https://ans-180228.stolav.ntnu.no:8185/_graph', true);
+                    receiveReq.onreadystatechange = handleSayHello;
+                    receiveReq.send(null);
+                }
+            }
+            var data = new google.visualization.DataTable();
+            function handleSayHello() {
+                if (receiveReq.readyState == 4) {
+                    document.getElementById('div_1').innerHTML = receiveReq.responseText;
+
+                }
+            }
+        </script>
+
+
+--%>
+
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html> 
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+        <script type='text/javascript' src='https://www.google.com/jsapi'></script>        
+        <script type='text/javascript'>
+            google.load('visualization', '1', {packages: ['orgchart']});
+            google.setOnLoadCallback(drawChart);
+            function drawChart() {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'Name');
+                data.addColumn('string', 'Manager');
+                data.addColumn('string', 'ToolTip');
+               data.addRows([
+                    ['A', '', 'A'],
+                    ['B', 'A', 'B']
+                ]);
+                var chart = new google.visualization.OrgChart(document.getElementById('chart_div'));
+                chart.draw(data, {allowHtml: true});
+            }
+        </script>
+
+
+    </head>
+    <body style="font-family: Arial;border: 0 none;">
+        <div id="div_1"></div>
+        <div id="visualization" style="width: 300px; height: 300px;"></div>
+        <a href="javascript:sayHello();">Say Hello</a><br />
+    </body>
+</html>
