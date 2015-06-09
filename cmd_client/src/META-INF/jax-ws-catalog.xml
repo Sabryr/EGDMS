@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="https://ans-180234.stolav.ntnu.no:8181/eGenVar_WebService/Authenticate_service?wsdl" uri="wsdl/ans-180234.stolav.ntnu.no_8181/eGenVar_WebService/Authenticate_service.wsdl"/>
+    <system systemId="https://ans-180234.stolav.ntnu.no:8181/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180234.stolav.ntnu.no_8181/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="http://ans-180234.stolav.ntnu.no:8080/eGenVar_WebService/Authenticate_service?wsdl" uri="wsdl/ans-180234.stolav.ntnu.no_8080/eGenVar_WebService/Authenticate_service.wsdl"/>
+    <system systemId="http://ans-180234.stolav.ntnu.no:8080/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180234.stolav.ntnu.no_8080/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="http://ans-180228.stolav.ntnu.no:8080/eGenVar_WebService/Authenticate_service?wsdl" uri="wsdl/ans-180228.stolav.ntnu.no_8080/eGenVar_WebService/Authenticate_service.wsdl"/>
+    <system systemId="http://ans-180228.stolav.ntnu.no:8080/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180228.stolav.ntnu.no_8080/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="http://localhost:8080/eGenVar_WebService/Authenticate_service?wsdl" uri="wsdl/localhost_8080/eGenVar_WebService/Authenticate_service.wsdl"/>
+    <system systemId="http://localhost:8080/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/localhost_8080/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="file:/home/sabryr/NetBeansProjects/egenv/src/WSDL/Authenticate_service.wsdl" uri="wsdl/Authenticate_service.wsdl"/>
+    <system systemId="https://ans-180228.stolav.ntnu.no:8181/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180228.stolav.ntnu.no_8181/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="http://localhost:8085/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/localhost_8085/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="http://ans-180228.stolav.ntnu.no:8085/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180228.stolav.ntnu.no_8085/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+    <system systemId="file:/home/sabryr/NetBeansProjects/egenv/src/no/ntnu/medisin/egenvar/xml/Authenticate_service.wsdl" uri="wsdl/Authenticate_service.wsdl"/>
+    <system systemId="http://ans-180230.stolav.ntnu.no:8085/eGenVar_WebService/Authenticate_service?xsd=1" uri="wsdl/ans-180230.stolav.ntnu.no_8085/eGenVar_WebService/Authenticate_service.xsd_1.xsd"/>
+</catalog>

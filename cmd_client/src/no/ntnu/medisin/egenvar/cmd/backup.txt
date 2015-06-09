@@ -1,0 +1,1084 @@
+ private String isAuthentic2(String username, String password) {
+        String result = "-1";
+        if (username != null && !username.isEmpty() && password != null) {
+            try {
+                getDatasource_users();
+                if (dataSource_users != null) {
+                    try {
+                        Connection ncon = dataSource_users.getConnection();
+                        if (!ncon.isClosed()) {
+                            Statement st_1 = ncon.createStatement();
+
+                            String s_1 = "select 1 from useraccounts where email='" + username + "' and password='" + password + "';";
+                            result = s_1;
+//                            ResultSet r_1 = st_1.executeQuery(s_1);
+//                            while (r_1.next()) {
+//                                result = 1;
+//                            }
+                        }
+                    } catch (SQLException e) {
+                        return e.getMessage();
+
+                    }
+                }
+            } catch (ServletException ex) {
+                return ex.getMessage();
+            }
+        }
+        return result;
+    }
+
+  /**
+     * Web service operation
+     */
+    @WebMethod(operationName = "debug")
+    public String debug(@WebParam(name = "username") String username, @WebParam(name = "password") String password) {
+        String result = "-1";
+        try {
+            MessageDigest sha1 = MessageDigest.getInstance("SHA1");
+//            byte[] pass_bytes = password.getBytes();
+//            sha1.reset();
+//            sha1.update(pass_bytes);
+//            byte[] pass_digest = sha1.digest();
+//
+//            Formatter formatter = new Formatter();
+//            for (byte b : pass_digest) {
+//                formatter.format("%02x", b);
+//            }
+//            String encript_pass = formatter.toString();
+            result = isAuthentic2(username, password);
+
+        } catch (NoSuchAlgorithmException ex) {
+            result = ex.getMessage();
+        }
+        return result;
+    }
+
+ @WebMethod(operationName = "getFromTable")
+    public java.lang.String[] getFromTable(@WebParam(name = "username") String username, @WebParam(name = "password") String password, @WebParam(name = "table") String table, @WebParam(name = "field") String field, @WebParam(name = "value") String value, @WebParam(name = "selectval") String selectval, @WebParam(name = "matchOP") String matchOP) {
+        String[] result = new String[1];
+        result[0] = "No match";
+
+        if (true) {//if (isAuthentic(username, password) == 1) {
+            try {
+                getDatasource_data();
+                if (dataSource_data != null) {
+                    ArrayList<String> resuklt_l = new ArrayList<String>(10);
+                    try {
+                        Connection ncon = dataSource_data.getConnection();
+                        if (!ncon.isClosed()) {
+                            Statement st_1 = ncon.createStatement();
+                            value = value.replaceAll("'", "\"");
+                            if (matchOP.equalsIgnoreCase("like")) {
+                                value = "%" + value + "%";
+                            }
+                            String s_1 = "SELECT " + selectval + "  from " + table + " WHERE " + field + " " + matchOP + " '" + value + "';";
+                            ResultSet r_1 = st_1.executeQuery(s_1);
+                            while (r_1.next()) {
+                                resuklt_l.add(r_1.getString(1));
+                            }
+                            ncon.close();
+                        }
+                    } catch (SQLException e) {
+                        result[0] = "Error: " + e.getMessage();
+
+                    }
+                    if (!resuklt_l.isEmpty()) {
+                        result = new String[resuklt_l.size()];
+                        for (int i = 0; i < result.length; i++) {
+                            result[i] = resuklt_l.get(i);
+
+                        }
+                        return result;
+
+
+                    }
+                }
+                return null;
+            } catch (ServletException ex) {
+                result[0] = "Error: " + ex.getMessage();
+            }
+        } else {
+            result[0] = "Authentication failed";
+        }
+        return result;
+    }
+
+ /**
+     * Web service operation
+     */
+    @WebMethod(operationName = "listFiles")
+    public java.lang.String[] listFiles(@WebParam(name = "filename") String filename, @WebParam(name = "matchOP") String matchOP) {
+        String[] result = new String[1];
+        result[0] = "No match";
+        try {
+            getDatasource_data();
+            if (dataSource_data != null) {
+                ArrayList<String> resuklt_l = new ArrayList<String>(10);
+                try {
+                    Connection ncon = dataSource_data.getConnection();
+                    if (!ncon.isClosed()) {
+                        Statement st_1 = ncon.createStatement();
+                        String s_1 = "select location  from files where location like '%" + filename + "%';";
+                        ResultSet r_1 = st_1.executeQuery(s_1);
+                        while (r_1.next()) {
+                            resuklt_l.add(r_1.getString(1));
+                        }
+                        ncon.close();
+                    }
+                } catch (SQLException e) {
+                    result[0] = "Error: " + e.getMessage();
+
+                }
+                if (!resuklt_l.isEmpty()) {
+                    result = new String[resuklt_l.size()];
+                    for (int i = 0; i < result.length; i++) {
+                        result[i] = resuklt_l.get(i);
+
+                    }
+                    return result;
+                }
+            }
+            return null;
+        } catch (ServletException ex) {
+            result[0] = "Error: " + ex.getMessage();
+        }
+        return result;
+    }
+
+
+    private void prepare_to_add(boolean recreate) {
+        boolean confirmed = true;
+        if (recreate) {
+            String ans = getuserInput("Recreate mode. All changes to " + PREPARE_TO_ADD_REPORT_FILENM + ", " + PREPARE_TO_ADD_FILES_FILENM + "," + PREPARE_TO_ADD_FILETYPR_FILENM + " and " + PREPARE_TO_ADD_BATCH_FILENM + " files will be lost.\nPress Y to confirm");
+            if (analyseUserResponse(ans, true) != 0) {
+                confirmed = false;
+            }
+        }
+        if (confirmed) {
+            String currentdir = runCommnad("pwd");
+            if (currentdir != null && !currentdir.isEmpty()) {
+                String batch_nm;
+                String report_nm;
+                File c_dir = new File(currentdir);
+                if (c_dir.isDirectory() && c_dir.canWrite()) {
+                    report_nm = c_dir.getName();
+                    try {
+                        File batch_dir = new File(c_dir.getParentFile().getCanonicalPath());
+                        if (batch_dir.isDirectory()) {
+                            if (batch_dir != null && batch_dir.isDirectory() && batch_dir.canWrite()) {
+                                String batch_folder_name = null;
+                                String batch_Parent_folder_name = null;
+                                String report_folder_name = null;
+                                String report_Parent_folder_name = null;
+                                String report_type = "NA";
+                                boolean ok = false;
+
+                                List existing_batch_details = null;
+                                List existing_report_details;
+                                while (!ok) {
+                                    String ans = getuserInput("What type of report is this ? (Select from " + reoport_type_l + ")").trim().toLowerCase();
+                                    if (reoport_type_l.contains(ans)) {
+                                        report_type = ans;
+                                        ok = true;
+                                    } else {
+                                        System.out.println("Invaild entry. ");
+                                    }
+                                }
+                                batch_nm = batch_dir.getName();
+                                try {
+                                    batch_folder_name = batch_dir.getCanonicalPath() + File.separatorChar;
+                                    batch_Parent_folder_name = batch_dir.getParentFile().getCanonicalPath() + File.separatorChar;
+                                    report_folder_name = c_dir.getCanonicalPath() + File.separatorChar;
+                                    report_Parent_folder_name = c_dir.getParentFile().getCanonicalPath() + File.separatorChar;
+                                } catch (IOException ex) {
+                                    System.out.println("Error 16: Failed to retrieve directory path " + ex.getMessage());
+                                    System.exit(16);
+                                }
+
+                                boolean report_ok = false;
+                                while (!report_ok) {
+                                    String ans = getuserInput("Report name =" + report_nm + "\nPress Y to use this name , N to cancel the current operation or enter a new name for the report");
+                                    if (analyseUserResponse(ans, true) == 0 || analyseUserResponse(ans, true) == 1) {
+                                        if (analyseUserResponse(ans, true) == 1) {
+                                            report_nm = ans;
+                                            String new_report_location = renameFolder(report_folder_name, report_Parent_folder_name + report_nm + File.separatorChar);
+                                            if (new_report_location != null) {
+                                                c_dir = new File(new_report_location);
+                                            } else {
+                                                System.out.println("Error 17: Renaming directory failed");
+                                                System.exit(17);
+                                            }
+                                        }
+                                        existing_report_details = getforQuery("SELECT * from report where name='" + report_nm + " and report_batch_id in (select id from report_batch where report_batch.name='" + 1 + "')' limit 1");
+                                        if (existing_report_details != null) {
+                                            ans = getuserInput("Report name =" + report_nm + " is already used in the database. If you want to append to this reoprt press Y. If you want to change the name press C. If you want to cancel the operation or not sure what to do press N.");
+                                            int c_ans = analyseUserResponse(ans, true);
+                                            if (c_ans == 0) {
+                                                report_ok = true;
+                                            } else if (c_ans < 0) {
+                                                System.out.println("Terminating all operations");
+                                                System.exit(107);
+                                            }
+                                        } else {
+                                            System.out.println("New report " + report_nm + " will be created");
+                                            report_ok = true;
+                                        }
+                                        boolean batch_ok = false;
+                                        if (report_ok) {
+                                            while (!batch_ok) {
+                                                ans = getuserInput("Batch name=" + batch_nm + "\nPress Y to use this name , N to cancel the current operation or enter a new name for the batch");
+                                                int ans_for_batch = analyseUserResponse(ans, true);
+                                                if (ans_for_batch == 1) {
+                                                    batch_nm = ans;
+                                                }
+                                                if (ans_for_batch == 0 || ans_for_batch == 1) {
+                                                    if (analyseUserResponse(ans, true) == 0 || analyseUserResponse(ans, true) == 1) {
+                                                        existing_batch_details = getforQuery("SELECT * from report_batch where name='" + batch_nm + "' limit 1");
+                                                        if (existing_batch_details != null) {
+                                                            ans = getuserInput("Batch name =" + batch_nm + " is already used in the database. If you want to append to this Batch press Y. If you want to change the name press C. If you want to cancel the operation or not sure what to do press N.");
+                                                            int c_ans = analyseUserResponse(ans, true);
+                                                            if (c_ans == 0) {
+                                                                batch_ok = true;
+                                                            } else if (c_ans < 0) {
+                                                                System.out.println("Terminating all operations");
+                                                                System.exit(107);
+                                                            }
+                                                        } else {
+                                                            System.out.println("New Batch " + batch_nm + " will be created");
+                                                            batch_ok = true;
+                                                        }
+                                                    }
+                                                    if (batch_ok) {
+                                                        if (ans_for_batch == 1) {
+                                                            String new_bathch_location = renameFolder(batch_folder_name, batch_Parent_folder_name + batch_nm + File.separatorChar);
+                                                            if (new_bathch_location != null) {
+                                                                batch_dir = new File(new_bathch_location);
+                                                                try {
+                                                                    String new_report_name = batch_dir.getCanonicalPath() + File.separatorChar + report_nm;
+                                                                    c_dir = new File(new_report_name);
+                                                                    if (!c_dir.isDirectory()) {
+                                                                        System.out.println("Error 19: Failed to retrieve directory path, after renaming");
+                                                                        System.exit(19);
+                                                                    }
+                                                                } catch (IOException ex) {
+                                                                    System.out.println("Error 16: Failed to retrieve directory path");
+                                                                    System.exit(16);
+                                                                }
+                                                            } else {
+                                                                System.out.println("Error 17: Renaming directory failed");
+                                                                System.exit(17);
+                                                            }
+                                                        }
+                                                        System.out.println("Batch name= " + batch_nm + "\tReport name= " + report_nm);
+                                                        String prepfilenm_reports = batch_dir.getCanonicalPath() + File.separatorChar + PREPARE_TO_ADD_REPORT_FILENM;
+                                                        String content = "";
+                                                        File[] file_reports_a = batch_dir.listFiles();
+                                                        ArrayList<String> c_report_in_desciption_l = new ArrayList<String>();
+                                                        ArrayList<String> c_report_in_database_l = new ArrayList<String>();
+                                                        if (existing_report_details != null) {
+                                                            for (int i = 0; i < existing_report_details.size(); i++) {
+                                                                if (existing_report_details.get(i) != null) {
+                                                                    String line = existing_report_details.get(i).toString();
+                                                                    String[] line_split = line.split("\\|\\|");
+                                                                    String c_name = "NA";
+                                                                    String properties = "";
+                                                                    for (int j = 0; j < line_split.length; j++) {
+                                                                        if (line_split[j].trim().startsWith("name=")) {
+                                                                            c_name = line_split[j].split("=")[1];
+                                                                        } else {
+                                                                            if (!properties.isEmpty()) {
+                                                                                properties = properties + ";";
+                                                                            }
+                                                                            properties = properties + line_split[j].trim().replaceAll("\t", " ");
+                                                                        }
+                                                                    }
+                                                                    if (!content.isEmpty()) {
+                                                                        content = content + "\n";
+                                                                    }
+                                                                    content = content + c_name + "\t" + properties;
+                                                                    c_report_in_database_l.add(c_name);
+                                                                }
+                                                            }
+                                                        }
+                                                        if (!recreate) {
+                                                            c_report_in_desciption_l = getcontent(prepfilenm_reports, 2, c_report_in_database_l);
+                                                        }
+
+                                                        c_report_in_desciption_l.addAll(c_report_in_database_l);
+                                                        for (int i = 0; i < file_reports_a.length; i++) {
+                                                            File file = file_reports_a[i];
+                                                            if (file.canRead() && file.isDirectory() && !c_report_in_desciption_l.contains(file.getName()) && !file.getName().equals(".") && !file.getName().equals("..")) {
+                                                                if (!content.isEmpty()) {
+                                                                    content = content + "\n";
+                                                                }
+                                                                content = content + file.getName() + "\tdescription=NA;batch=" + batch_nm + ";reporter=" + user_email + ";report_type=" + report_type + ";genomicReferenceReport_id=1";
+                                                            }
+                                                        }
+                                                        wirteToDescriptFile(prepfilenm_reports, "#Report_name\tdescription\n", content, recreate, c_report_in_database_l);
+                                                        String prepfilenm_batch = batch_dir.getCanonicalPath() + File.separatorChar + PREPARE_TO_ADD_BATCH_FILENM;
+                                                        String batch_content = batch_nm + "\tdescription=NA";
+                                                        ArrayList<String> c_batch_in_database_l = new ArrayList<String>(1);
+                                                        if (existing_batch_details != null) {
+                                                            batch_content = "";
+                                                            for (int i = 0; i < existing_batch_details.size(); i++) {
+                                                                if (existing_batch_details.get(i) != null) {
+                                                                    String line = existing_batch_details.get(i).toString();
+                                                                    String[] line_split = line.split("\\|\\|");
+                                                                    String c_name = "NA";
+                                                                    String properties = "";
+                                                                    for (int j = 0; j < line_split.length; j++) {
+                                                                        if (line_split[j].trim().startsWith("name=")) {
+                                                                            c_name = line_split[j].split("=")[1];
+                                                                        } else {
+                                                                            if (!properties.isEmpty()) {
+                                                                                properties = properties + ";";
+                                                                            }
+                                                                            properties = properties + line_split[j].trim().replaceAll("\t", " ");
+                                                                        }
+                                                                    }
+                                                                    if (!batch_content.isEmpty()) {
+                                                                        batch_content = batch_content + "\n";
+                                                                    }
+                                                                    batch_content = batch_content + c_name + "\t" + properties;
+                                                                    c_batch_in_database_l.add(c_name);
+                                                                }
+                                                            }
+
+                                                        }
+                                                        wirteToDescriptFile(prepfilenm_batch, "#Batch_name\tdescription\n", batch_content, recreate, c_batch_in_database_l);
+                                                        String prepfilenm_files = c_dir.getCanonicalPath() + File.separatorChar + PREPARE_TO_ADD_FILES_FILENM;
+                                                        String prepfilenm_fyletypes = c_dir.getCanonicalPath() + File.separatorChar + PREPARE_TO_ADD_FILETYPR_FILENM;
+                                                        ArrayList<String> c_files_in_desciption_l = new ArrayList<String>();
+                                                        if (!recreate) {
+                                                            c_files_in_desciption_l = getcontent(prepfilenm_files, 2, c_files_in_desciption_l);
+                                                        }
+                                                        File[] file_a = c_dir.listFiles();
+                                                        ArrayList<String> extentions_list = new ArrayList<String>(file_a.length);
+                                                        if (file_a != null) {
+                                                            ArrayList<File> full_file_l = new ArrayList<File>(file_a.length);
+                                                            for (int i = 0; i < file_a.length; i++) {
+                                                                use_subdirectories_asked_from_user = false;
+                                                                ArrayList<File> expanded_file_l = getAllinSubFolders(file_a[i], c_files_in_desciption_l, false);
+                                                                for (int j = 0; j < expanded_file_l.size(); j++) {
+                                                                    File file = expanded_file_l.get(j);
+                                                                    if (file.canRead() && !file.getName().equals(".") && !file.getName().equals("..")) {
+                                                                        String c_file_nm = file.getName();
+                                                                        String extention = c_file_nm.substring(c_file_nm.lastIndexOf('.') + 1, c_file_nm.length());
+                                                                        if (!extentions_list.contains(extention)) {
+                                                                            extentions_list.add(extention);
+                                                                        }
+                                                                        full_file_l.add(file);
+                                                                    }
+                                                                }
+                                                            }
+                                                            HashMap<String, String> filetypeName_map = new HashMap<String, String>();
+                                                            try {
+                                                                filetypeName_map = call_getFiletypeDescriptions(extentions_list);
+                                                            } catch (Exception ex) {
+                                                                System.out.println("Error 41: Failed to retrieve filetypes from server");
+                                                            }
+                                                            ArrayList<String> c_fylety_names_in_descriptFile_l = new ArrayList<String>();
+                                                            if (!recreate) {
+                                                                c_fylety_names_in_descriptFile_l = getcontent(prepfilenm_fyletypes, 2, c_fylety_names_in_descriptFile_l);
+                                                            }
+                                                            if (!filetypeName_map.isEmpty()) {
+                                                                content = "";
+                                                                for (int i = 0; i < extentions_list.size(); i++) {
+                                                                    if (extentions_list.get(i) != null && !extentions_list.get(i).equalsIgnoreCase("NA")) {
+                                                                        String c_name_of_type = getFilename4Extention(filetypeName_map, extentions_list.get(i));
+                                                                        if (c_name_of_type != null && !c_name_of_type.equalsIgnoreCase("NA") && !c_fylety_names_in_descriptFile_l.contains(c_name_of_type)) {
+                                                                            String c_details = filetypeName_map.get(c_name_of_type);
+                                                                            content = content + c_name_of_type + "\t" + c_details + "\n";
+                                                                        } else {
+                                                                            content = content + extentions_list.get(i) + "\textention=" + extentions_list.get(i) + ";description=No Description available\n";
+                                                                        }
+                                                                    } else {
+                                                                        content = content + extentions_list.get(i) + "\textention=" + extentions_list.get(i) + ";description=No Description available\n";
+                                                                    }
+
+                                                                    if (filetypeName_map.containsKey(extentions_list.get(i))) {
+                                                                        String c_typename = extentions_list.get(i);
+                                                                        String c_details = filetypeName_map.get(extentions_list.get(i));
+                                                                        if (!c_fylety_names_in_descriptFile_l.contains(c_typename)) {
+                                                                            content = content + c_typename + "\t" + c_details + "\n";
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            wirteToDescriptFile(prepfilenm_fyletypes, "#filetype\tDescription\n", content, recreate, new ArrayList<String>(1));
+//                                            System.out.println("To change this edit the:\n " + prepfilenm_files + "\n    and the\n " + prepfilenm_fyletypes + " file\n");
+                                                            content = "";
+                                                            for (int i = 0; i < full_file_l.size(); i++) {
+                                                                File file = full_file_l.get(i);
+                                                                try {
+                                                                    String c_file_nm = file.getName();
+                                                                    String file_extension = c_file_nm.substring(c_file_nm.lastIndexOf('.') + 1, c_file_nm.length());
+                                                                    String filetype_name = getFilename4Extention(filetypeName_map, file_extension);
+                                                                    if (filetype_name == null || filetype_name.isEmpty() || filetype_name.equalsIgnoreCase("NA")) {
+                                                                    } else {
+                                                                        content = content + file.getCanonicalPath() + "\tbatch=" + batch_nm + ";report=" + report_nm + ";file_type_description=" + filetype_name + ";description=" + file.getName() + "\n";
+                                                                    }
+                                                                } catch (IOException ex) {
+                                                                    System.out.println("Error 40: Failed to retrieve directory path for " + file.getName());
+                                                                }
+                                                            }
+                                                            wirteToDescriptFile(prepfilenm_files, "#file_name\tDescription\tfile_type_description\n", content, recreate, new ArrayList<String>(1));
+                                                        } else {
+                                                            System.out.println("Error 12: Failed to list files from :" + currentdir);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        System.out.println("Invalid input");
+                                    }
+                                }
+                            } else {
+                                System.out.println("Error 11: Can not wite to current directory:" + c_dir.getParent());
+                            }
+                        } else {
+                            System.out.println("Error 21: Failed to retrieve directory path");
+                            System.exit(21);
+                        }
+                    } catch (IOException ex) {
+                        System.out.println("Error 20: Failed to retrieve directory path");
+                        System.exit(20);
+                    }
+
+                } else {
+                    System.out.println("Error 12: Can not wite to current directory:" + currentdir);
+                }
+            }
+
+        } else {
+            System.out.println("Operation terminated by user");
+            System.exit(1);
+        }
+    }
+
+
+private void writeContentBatchANDReport (String prepfilenm, String table, boolean recreate, File[] file_a, String query_existings, String batch_nm, String report_type, String heading) {
+        String content = "";
+        ArrayList<String> c_desciption_in_file_l = new ArrayList<String>();
+        String tocheckwithdb = null;
+        for (int i = 0; i < file_a.length; i++) {
+            if (file_a[i].canRead() && file_a[i].isDirectory() && !file_a[i].getName().equals(".") && !file_a[i].getName().equals("..")) {
+                if (tocheckwithdb == null) {
+                    tocheckwithdb = "'" + file_a[i].getName() + "'";
+                } else {
+                    tocheckwithdb = tocheckwithdb + ",'" + file_a[i].getName() + "'";
+                }
+            }
+        }
+        if (tocheckwithdb != null) {
+            ArrayList<String> column_l = new ArrayList<String>(getParametersForPrepare(table));
+            query_existings = query_existings.replace(TO_CHECK_AGAINST_DB_FLAG, tocheckwithdb);
+            List existing_details = getforQuery(query_existings, false);
+            ArrayList<String> c_report_in_database_l = new ArrayList<String>(5);
+            if (existing_details != null) {
+                for (int i = 0; i < existing_details.size(); i++) {
+                    if (existing_details.get(i) != null) {
+                        String line = existing_details.get(i).toString();
+                        String[] line_split = line.split("\\|\\|");
+                        String c_name = "NA";
+                        String properties = "";
+                        for (int j = 0; j < line_split.length; j++) {
+                            if (line_split[j].trim().startsWith("name=")) {
+                                c_name = line_split[j].split("=")[1];
+                            } else {
+                                if (!properties.isEmpty()) {
+                                    properties = properties + ";";
+                                }
+                                properties = properties + line_split[j].trim().replaceAll("\t", " ");
+                            }
+                        }
+                        if (!content.isEmpty()) {
+                            content = content + "\n";
+                        }
+                        content = content + c_name + "\t" + properties;
+                        c_report_in_database_l.add(c_name);
+                    }
+                }
+            }
+            if (!recreate) {
+                c_desciption_in_file_l = getcontent(prepfilenm, 2, c_report_in_database_l);
+            }
+            c_desciption_in_file_l.addAll(c_report_in_database_l);
+            for (int i = 0; i < file_a.length; i++) {
+                File file = file_a[i];
+                if (file.canRead() && file.isDirectory() && !c_desciption_in_file_l.contains(file.getName()) && !file.getName().equals(".") && !file.getName().equals("..")) {
+                    if (!content.isEmpty()) {
+                        content = content + "\n";
+                    }
+                    content = content + file.getName() + "\tdescription=NA;batch=" + batch_nm + ";reporter=" + user_email + ";report_type=" + report_type + ";genomicReferenceReport_id=1";
+                }
+            }
+        }
+        wirteToDescriptFile(prepfilenm, heading + "\n", content, recreate, c_desciption_in_file_l);
+    }
+
+//        HashMap<String, String> help_map = new HashMap<String, String>();
+//        help_map.put("-" + VERSION_FLAG, "print version and check for updates");
+//        help_map.put("-" + HELP_FLAG, "print this commnad help");
+//        help_map.put("-" + AUTHENTICATE_FLAG, "Authenticate user against the server");
+//        help_map.put("-" + UPGARE_FLAG, "");
+//        help_map.put("-" + VERBOSE_FLAG, "");
+//        help_map.put("-" + LIST_FILES_FLAG, "");
+//        help_map.put("-" + FIND_FILES_FLAG, "");
+//        help_map.put("-" + FIND_FILES_CHEKSUM_FLAG, "");
+//        help_map.put("-" + FIND_REPORT_FLAG, "");
+//        help_map.put("-" + FIND_BATCH_FLAG, "");
+//        help_map.put("-" + FIND_PERSON_FLAG, "");
+//        help_map.put("-" + FIND_CHILDREN_FLAG, "");
+//        help_map.put("-" + FIND_PARENT_FLAG, "");
+//        help_map.put("-" + FIND_EXACTMACTH_FILES_FLAG, "");
+//        help_map.put("-" + LINE_NUMBER_FLAG, "");
+//        help_map.put("-" + GET_FILE_ID_FLAG, "");
+//        help_map.put("-" + ADD_FILES_FLAG, "");
+//        help_map.put("-" + UNDO_FILES_FLAG, "");
+//        help_map.put("-" + DOWNLOAD_FILES_FLAG, "");
+//        help_map.put("-" + ADD_RELATIONSHIP_FLAG, "");
+//        help_map.put("-" + ADD_CHILD_FLAG, "");
+//        help_map.put("-" + ADD_PARENT_FLAG, "");
+//        help_map.put("-" + ADD_REPORT_CHILD_FLAG, "");
+//        help_map.put("-" + ADD_REPORT_PARENT_FLAG, "");
+//        help_map.put("-" + ADD_BATCH_CHILD_FLAG, "");
+//        help_map.put("-" + ADD_BATCH_PARENT_FLAG, "");
+//        help_map.put("-" + PREPARE_TO_ADD_FILES_FLAG, "");
+//        help_map.put("-" + PREPARE_TO_ADD__CUSTOM__FLAG, "");
+//        help_map.put("-" + CLEAR_AND_PREPARE_TO_ADD_FILES_FLAG, "");
+//        help_map.put("-" + DIAGNOSTICS_FLAG, "");
+//        help_map.put("-" + DIFF_FLAG, "");
+
+
+ public static void main(String[] args) {
+        EGenVAR_CMD2 cmd = new EGenVAR_CMD2();
+        boolean verbosemode = false;
+//        boolean listfiles = false;
+//        boolean findfiles = false;
+//        boolean findfiles_chgeksum = false;
+//        boolean findreports = false;
+//        boolean findbatches = false;
+//        boolean findfilechildren = false;
+//        boolean findfileparent = false;
+//        boolean findperson = false;
+//        boolean findexactmacthonly = false;
+//        boolean printlinenumber = false;
+//        boolean undo = false;
+//        boolean addfiles = false;
+//        boolean download = false;
+//        boolean add_child_relationship = false;
+//        boolean add_parent_relationship = false;
+//        boolean add_report_child_relationship = false;
+//        boolean add_report_parent_relationship = false;
+//        boolean add_batch_child_relationship = false;
+//        boolean add_batch_parent_relationship = false;
+//        boolean prepare_to_add_op = false;
+//        boolean prepare_to_add_custom_op = false;
+//        boolean clear_and_prepare_to_add_op = false;
+//        boolean get_diff_op = false;
+//        boolean adavnced_ralationships = false;
+//        boolean exact_only_adavnced_ralationships = false;
+//        boolean getfileid = false;
+        if (args != null && args.length > 0 && args[0].startsWith("-")) {
+            String first_arg = args[0].trim().replace("-", "");
+            int upgradeDecideder = cmd.rand(1, 4);
+            if (upgradeDecideder == 3) {
+                double latest_version = cmd.getLatestVersion();
+                if (latest_version > version) {
+                    System.out.println("\nA newer version is available. Latest version=" + latest_version + " Please update (egenv -update)\n");
+                }
+            }
+            if (first_arg.contains("?")) {
+                first_arg = first_arg.replace("?", "").trim();
+                if (Helpmap.containsKey(first_arg)) {
+                    System.out.println(first_arg + ": " + Helpmap.get(first_arg));
+                } else {
+                    System.out.println("No help found for " + first_arg + ". Please not that the arguments are case sensitive");
+                }
+            } else if (first_arg.equalsIgnoreCase(HELP_FLAG)) {
+                cmd.printValidArguments(false);
+            } else if (first_arg.equalsIgnoreCase(VERSION_FLAG) || first_arg.equals(VERSION_FLAG2)) {
+                System.out.println("eGenVar command line interface version " + version);
+                double latest_version = cmd.getLatestVersion();
+                if (latest_version < 0) {
+                    System.out.println("Error 1A: Communication error, getting latest version number failed");
+                } else if (latest_version > version) {
+                    System.out.println("A newer version is available. Latest version=" + latest_version);
+                } else {
+                    System.out.println("Your software is uptodate !");
+                }
+            } else if (first_arg.contains(AUTHENTICATE_FLAG)) {
+                if (cmd.authenticate()) {
+                    System.out.println("Local authentication success. ");
+                } else {
+                    System.out.println("Authentication failed");
+                }
+            } else if (first_arg.equals(DIAGNOSTICS_FLAG)) {
+                cmd.diagnostics(1);
+            } else if (first_arg.contains(UPGARE_FLAG)) {
+                cmd.updateSoftware();
+            } else {
+                if (cmd.authenticate()) {
+                    if (first_arg.contains(VERBOSE_FLAG)) {
+                        verbosemode = true;
+                    }
+                    if (first_arg.equalsIgnoreCase(PREPARE_TO_ADD_FILES_FLAG)) {
+                        if (args.length > 2 && args[1] != null && !args[1].isEmpty()) {
+                            if (args[1].equals(CLEAR_AND_PREPARE_TO_ADD_FILES_FLAG)) {
+                                cmd.prepare_to_add(true);
+                            } else if (args[1].equals(PREPARE_TO_ADD_TEMPLATE_FLAG)) {
+                                if (args.length > 3 && args[2] != null && !args[2].isEmpty()) {
+                                    cmd.prepareTemplate(args[2].trim(), false, false);
+                                } else {
+                                    System.out.println("Error 1A: " + PREPARE_TO_ADD_TEMPLATE_FLAG + " requires on more argument <table name>");
+                                }
+                            }
+                        } else {
+                            cmd.prepare_to_add(false);
+                        }
+                        if (args.length > 2 && args[1] != null && args[1].equals(CLEAR_AND_PREPARE_TO_ADD_FILES_FLAG)) {
+                            cmd.prepare_to_add(true);
+                        } else {
+                            if (paramList.isEmpty()) {
+                                cmd.prepare_to_add(false);
+                            } else if (paramList.size() == 1 && paramList.get(0).startsWith(PREPARE_TO_ADD__CUSTOM__FLAG)) {
+                                String table = paramList.get(0).replaceFirst(PREPARE_TO_ADD__CUSTOM__FLAG, "");
+                                if (table == null || table.isEmpty()) {
+                                    System.out.println("Error 525: Table name not specified");
+                                } else {
+                                    cmd.prepareTemplate(table, false, false);
+                                }
+
+                            } else {
+                                cmd.printValidArguments(false);
+                            }
+                        }
+
+                    } else if (first_arg.equalsIgnoreCase(CLEAR_AND_PREPARE_TO_ADD_FILES_FLAG)) {
+                        clear_and_prepare_to_add_op = true;
+                    } else if (first_arg.contains(LIST_FILES_FLAG)) {
+                        listfiles = true;
+                        first_arg = first_arg.replace(LIST_FILES_FLAG, "");
+                        if (first_arg.contains(LINE_NUMBER_FLAG)) {
+                            printlinenumber = true;
+                        }
+                        first_arg = first_arg.replace(LINE_NUMBER_FLAG, "");
+                        if (first_arg.contains(GET_FILE_ID_FLAG)) {
+                            getfileid = true;
+                        }
+                    } else if (first_arg.contains(FIND_FILES_FLAG)) {
+                        first_arg = first_arg.replace(FIND_FILES_FLAG, "");
+                        if (first_arg.contains(FIND_PARENT_FLAG)) {
+                            findfileparent = true;
+                            first_arg = first_arg.replace(FIND_PARENT_FLAG, "");
+                        } else if (first_arg.contains(FIND_CHILDREN_FLAG)) {
+                            findfilechildren = true;
+                            first_arg = first_arg.replace(FIND_CHILDREN_FLAG, "");
+                        } else if (first_arg.contains(FIND_REPORT_FLAG)) {
+                            findreports = true;
+                        } else if (first_arg.contains(FIND_BATCH_FLAG)) {
+                            findbatches = true;
+                        } else if (first_arg.contains(FIND_PERSON_FLAG)) {
+                            findperson = true;
+                        } else if (first_arg.contains(FIND_EXACTMACTH_FILES_FLAG)) {
+                            findexactmacthonly = true;
+                        } else if (first_arg.contains(FIND_FILES_CHEKSUM_FLAG)) {
+                            findfiles_chgeksum = true;
+                        } else {
+                            findfiles = true;
+                        }
+                        if (first_arg.contains(LINE_NUMBER_FLAG)) {
+                            printlinenumber = true;
+                        }
+                        first_arg = first_arg.replace(LINE_NUMBER_FLAG, "");
+                        if (first_arg.contains(GET_FILE_ID_FLAG)) {
+                            getfileid = true;
+                        }
+                    } else if (first_arg.contains(ADD_FILES_FLAG)) {
+                        addfiles = true;
+                    } else if (first_arg.contains(UNDO_FILES_FLAG)) {
+                        undo = true;
+                    } else if (first_arg.contains(DOWNLOAD_FILES_FLAG)) {
+                        download = true;
+                    } else if (first_arg.contains(ADD_RELATIONSHIP_FLAG)) {
+                        first_arg = first_arg.replace(ADD_RELATIONSHIP_FLAG, "");
+                        if (first_arg.contains(ADD_CHILD_FLAG)) {
+                            add_child_relationship = true;
+                        } else if (first_arg.contains(ADD_PARENT_FLAG)) {
+                            add_parent_relationship = true;
+                        } else if (first_arg.contains(ADD_REPORT_PARENT_FLAG)) {
+                            add_report_parent_relationship = true;
+                        } else if (first_arg.contains(ADD_REPORT_CHILD_FLAG)) {
+                            add_report_child_relationship = true;
+                        } else if (first_arg.contains(ADD_BATCH_CHILD_FLAG)) {
+                            add_batch_child_relationship = true;
+                        } else if (first_arg.contains(ADD_BATCH_PARENT_FLAG)) {
+                            add_batch_parent_relationship = true;
+                        }
+                    } else if (first_arg.contains(DIFF_FLAG)) {
+                        get_diff_op = true;
+                    } else if (first_arg.contains(ADAVNCED_RELATE_FLAG)) {
+                        if (first_arg.contains(ADAVNCED_RELATE_EXACT_FLAG)) {
+                            exact_only_adavnced_ralationships = true;
+                        } else {
+                            adavnced_ralationships = true;
+                        }
+                    }
+                    ArrayList<String> paramList = new ArrayList<String>(args.length);
+                    if (args != null && args.length > 1) {
+                        for (int i = 1; i < args.length; i++) {
+                            String c_file = args[i].trim();
+                            if (!c_file.isEmpty()) {
+                                if (!paramList.contains(c_file)) {
+                                    paramList.add(c_file);
+                                }
+                            }
+                        }
+                    }
+
+                    if (listfiles) {
+                        String column_to_select = "location";
+                        if (getfileid) {
+                            column_to_select = "CONCAT(location,' - FileID=',id)";
+                        }
+//                        cmd.printResults(cmd.call_listFromTable("files", "location", "%", "concat(location,'|', checksum)", "like", verbosemode), printlinenumber, verbosemode);
+                        cmd.printResults(cmd.call_listFromTable("files", "location", "%", column_to_select, "like", verbosemode), printlinenumber, verbosemode);
+
+                    } else if (clear_and_prepare_to_add_op) {
+                        cmd.prepare_to_add(true);
+                    } else if (prepare_to_add_op) {
+                        if (paramList.isEmpty()) {
+                            cmd.prepare_to_add(false);
+                        } else if (paramList.size() == 1 && paramList.get(0).startsWith(PREPARE_TO_ADD__CUSTOM__FLAG)) {
+                            String table = paramList.get(0).replaceFirst(PREPARE_TO_ADD__CUSTOM__FLAG, "");
+                            if (table == null || table.isEmpty()) {
+                                System.out.println("Error 525: Table name not specified");
+                            } else {
+                                cmd.prepareTemplate(table, false, false);
+                            }
+
+                        } else {
+                            cmd.printValidArguments(false);
+                        }
+
+                    } else if (get_diff_op) {
+                        cmd.getDiff();
+                    } else if (!paramList.isEmpty()) {
+                        String column_to_select = "location";
+                        if (getfileid) {
+                            column_to_select = "CONCAT(location,' - FileID=',id)";
+                        }
+                        if (findfiles) {
+                            cmd.printResults(cmd.call_listFromTable("files", "location", paramList.get(0), column_to_select, "like", verbosemode), printlinenumber, verbosemode);
+                        } else if (findfiles_chgeksum) {
+                            cmd.printResults(cmd.call_listFromTable("files", "checksum", paramList.get(0), column_to_select, "=", verbosemode), printlinenumber, verbosemode);
+                        } else if (findperson) {
+                            String quary = "select " + column_to_select + " from files where files.id in (select files_id from files2report where report_id in (select id from report where report.reporter_id in (select id from person where person.email=?)))";
+                            cmd.printResults(cmd.call_listFromTableForQuery(quary, paramList.get(0), verbosemode), printlinenumber, verbosemode);
+                        } else if (findreports) {
+                            String quary = "select " + column_to_select + " from files where files.id in (select files_id from files2report where report_id in (select id from report where report.name=? ))";
+                            cmd.printResults(cmd.call_listFromTableForQuery(quary, paramList.get(0), verbosemode), printlinenumber, verbosemode);
+                        } else if (findbatches) {
+                            String quary = "select " + column_to_select + " from files where files.id in (select files_id from files2report where report_id in (select id from report where report.report_batch_id in (select id from report_batch where report_batch.name=?)))";
+                            cmd.printResults(cmd.call_listFromTableForQuery(quary, paramList.get(0), verbosemode), printlinenumber, verbosemode);
+                        } else if (findfileparent) {
+                            String quary = " select " + column_to_select + "  from files where files.id in (select parentfile_id from file_hierarchy where childfile_id=(select id from files where files.location like ?));";
+                            cmd.printResults(cmd.call_listFromTableForQuery(quary, "%" + paramList.get(0), verbosemode), printlinenumber, verbosemode);
+                        } else if (findfilechildren) {
+                            String quary = " select " + column_to_select + "  from files where files.id in (select childfile_id from file_hierarchy where parentfile_id=(select id from files where files.location like ?));";
+                            cmd.printResults(cmd.call_listFromTableForQuery(quary, "%" + paramList.get(0), verbosemode), printlinenumber, verbosemode);
+                        } else if (findexactmacthonly) {
+                            cmd.printResults(cmd.call_listFromTable("files", "name", paramList.get(0), column_to_select, "=", verbosemode), printlinenumber, verbosemode);
+                        } else if (addfiles) {
+                            if (paramList.size() == 1 && paramList.get(0).startsWith("-f")) {
+                                cmd.createFileEntries(cmd.getFilesFromFile(paramList.get(0).replaceFirst("-f", ""), true), verbosemode);
+                            } else if (paramList.size() == 1 && paramList.get(0).startsWith("-t")) {
+                                cmd.readTemplate(paramList.get(0).replaceFirst("-t", ""), verbosemode);
+                            } else {
+                                cmd.createFileEntries(cmd.getAllinSubFolders(paramList, true), verbosemode);
+                            }
+                        } else if (undo) {
+                            cmd.undoForFile(paramList.get(0), printlinenumber, verbosemode);
+                        } else if (download) {
+                            cmd.getFiles(paramList, verbosemode);
+                        } else if (add_child_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 0, false);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, false, 0));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatec <parent_file> <child_file/s>");
+                            }
+                        } else if (add_parent_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 0, true);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, true, 0));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatep  <child_file> <parent_file/s>");
+                            }
+                        } else if (add_report_parent_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 1, true);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, true, 1));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatep  <child_file> <parent_file/s>");
+                            }
+                        } else if (add_report_child_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 1, false);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, false, 1));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatep  <child_file> <parent_file/s>");
+                            }
+                        } else if (add_batch_child_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 2, false);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, false, 2));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatep  <child_file> <parent_file/s>");
+                            }
+                        } else if (add_batch_parent_relationship) {
+                            if (paramList.size() == 1) {
+                                cmd.addRelationshipsFromFile(paramList.get(0), 2, true);
+                            } else if (paramList.size() >= 1) {
+                                System.out.println(cmd.call_AddRelationships(paramList.remove(0), paramList, true, 2));
+                            } else {
+                                System.out.println("This function requires atleast two arguments. Format: egenv -relatep  <child_file> <parent_file/s>");
+                            }
+                        } else if (adavnced_ralationships) {
+                            if (paramList.size() > 1) {
+                                if (paramList.get(0).contains(";")) {
+                                    System.out.println("Error: batch queries are not supported in this mode. Please use " + ADAVNCED_RELATE_EXACT_FLAG + " flag. ");
+                                } else {
+                                    cmd.advancedQueryHandler(paramList.get(0), paramList.get(1), false);
+                                }
+                            } else {
+                                cmd.printValidArguments(true);
+                            }
+                        } else if (exact_only_adavnced_ralationships) {
+                            if (paramList.size() > 1) {
+                                cmd.advancedQueryHandler(paramList.get(0), paramList.get(1), true);
+                            } else {
+                                cmd.printValidArguments(true);
+                            }
+
+                        } else {
+                            cmd.printValidArguments(false);
+                        }
+                    } else {
+                        cmd.printValidArguments(true);
+                    }
+                } else {
+                    System.out.println("Error: authentication failed");
+                }
+
+            }
+        } else {
+            cmd.printValidArguments(false);
+        }
+
+
+    }
+
+
+ private void createTag(String dir_for_placing_prep_files) {
+        List from_db_list = advancedQueryHandler("ontologytypes.id=*", "ontologytypes.table_nm,starting_parent_id,description,id", false, false, true, false, false, false);
+        if (from_db_list != null) {
+            ArrayList<String> reoport_type_l = new ArrayList<String>(from_db_list);
+            HashMap<String, String> result_map = new HashMap<String, String>();
+            for (int i = 0; i < reoport_type_l.size(); i++) {
+                String key = null;
+                String key_val = null;
+                String[] split_a = reoport_type_l.get(i).split("\\|\\|");
+                for (int j = 0; j < split_a.length; j++) {
+                    String[] c_split = split_a[j].split("=");
+                    if (c_split.length >= 2) {
+                        String column_nm = c_split[0].split("\\.")[c_split[0].split("\\.").length - 1];
+                        String value = c_split[1];
+                        if (column_nm.equalsIgnoreCase("description")) {
+                            key = value;
+                        } else if (column_nm.equalsIgnoreCase("table_nm")) {
+                            if (key_val == null) {
+                                key_val = value;
+                            } else {
+                                key_val = key_val + "|" + value;
+                            }
+                        } else if (column_nm.equalsIgnoreCase("starting_parent_id")) {
+                            if (key_val == null) {
+                                key_val = value;
+                            } else {
+                                key_val = key_val + "|" + value;
+                            }
+                        } else if (column_nm.equalsIgnoreCase("id")) {
+                            if (key_val == null) {
+                                key_val = value;
+                            } else {
+                                key_val = key_val + "|" + value;
+                            }
+                        }
+                    }
+                }
+                if (key != null && key_val != null) {
+                    result_map.put(key, key_val);
+                }
+            }
+//            boolean ok = false;
+            if (!result_map.isEmpty()) {
+                ArrayList<String> map_key_l = new ArrayList<String>(result_map.keySet());
+                String user_selection = getUserSelection(map_key_l, null, "What type of tag do you want to create?");
+                String[] seed_data_a = result_map.get(user_selection).split("\\|");
+                String table_nm = seed_data_a[0];
+                String starting_parent_id = null;
+                String final_ref = "NA";
+                String previous_user_selection = user_selection;
+                if (seed_data_a.length >= 3) {
+                    starting_parent_id = seed_data_a[1];
+                    final_ref = table_nm + "=" + seed_data_a[1];
+                } else {
+                    starting_parent_id = "0";
+                }
+                String path = user_selection;
+                if (table_nm != null) {
+                    boolean comleted = false;
+                    int safety = 25;
+                    while (!comleted && safety > 0) {
+                        safety--;
+                        if (table_nm != null) {
+                            List tmp_from_db_list = advancedQueryHandler(table_nm + ".parent_id=" + starting_parent_id, table_nm + ".id,name,parent_id, next_table", true, false, true, false, false, false);
+                            if (tmp_from_db_list != null) {
+                                HashMap<String, String> tmp_result_map = new HashMap<String, String>();
+                                ArrayList<String> tmp_reoport_type_l = new ArrayList<String>(tmp_from_db_list);
+                                for (int i = 0; i < tmp_reoport_type_l.size(); i++) {
+                                    String[] tmp_split_a = tmp_reoport_type_l.get(i).split("\\|\\|");
+                                    String next_table_nm = null;
+                                    String label = null;
+                                    String parent_id = null;
+                                    String id = null;
+                                    String name = null;
+                                    for (int j = 0; j < tmp_split_a.length; j++) {
+                                        String[] c_split = tmp_split_a[j].split("=");
+                                        if (c_split.length >= 2) {
+                                            String column_nm = c_split[0].split("\\.")[c_split[0].split("\\.").length - 1];
+                                            String value = c_split[1];
+                                            if (column_nm.equalsIgnoreCase("next_table")) {
+                                                next_table_nm = value;
+                                            } else if (column_nm.equalsIgnoreCase("id")) {
+                                                id = value;
+                                            } else if (column_nm.equalsIgnoreCase("parent_id")) {
+                                                parent_id = value;
+                                            } else if (column_nm.equalsIgnoreCase("name")) {
+                                                name = value;
+                                            }
+                                        }
+                                    }
+                                    if (next_table_nm != null && parent_id != null && id != null && name != null) {
+                                        if (starting_parent_id == null || !starting_parent_id.equals(id)) {
+                                            label = next_table_nm + "=" + id;
+                                            tmp_result_map.put(name, next_table_nm + "|" + id + "|" + label);
+                                        }
+                                    }
+                                }
+                                if (!tmp_result_map.isEmpty()) {
+                                    HashMap<String, String> override_map = new HashMap<String, String>();
+                                    override_map.put("X", "None of the above or more than one possibilities, use the parent value(" + previous_user_selection + ")");
+//                                    tmp_result_map.put("", null);
+                                    ArrayList<String> tmp_map_key_l = new ArrayList<String>(tmp_result_map.keySet());
+                                    String user_selection2 = getUserSelection(tmp_map_key_l, override_map, "What type of " + user_selection + " is it?");
+                                    if (tmp_result_map.containsKey(user_selection2) && tmp_result_map.get(user_selection2) != null) {
+                                        String[] new_param = tmp_result_map.get(user_selection2).split("\\|");
+                                        if (new_param.length >= 3) {
+                                            table_nm = new_param[0];
+                                            starting_parent_id = new_param[1];
+                                            previous_user_selection = user_selection2;
+                                            final_ref = new_param[2];
+                                            path = path + "_" + user_selection2;
+                                            user_selection = user_selection + "=>" + user_selection2;
+                                        }
+                                    } else {
+                                        path = path + "_" + "Using_higher_level_parent";
+                                        user_selection = user_selection + "=>" + "Exact_type_not_available_or_more_than_one_possibility";
+                                        comleted = true;
+                                    }
+
+                                } else {
+                                    comleted = true;
+                                }
+
+                            } else {
+                                comleted = true;
+                                //get the next table
+                            }
+                        } else {
+                            comleted = true;
+                            //get the next table
+                        }
+                    }
+                } else {
+                    System.out.println("Error 75C: Communication failer.");
+                }
+                ArrayList<String> possible_tables_l = new ArrayList<String>();
+                possible_tables_l.add("files");
+                possible_tables_l.add("report");
+                possible_tables_l.add("report_batch");
+                possible_tables_l.add("sampledetails");
+                possible_tables_l.add("donordetails");
+                String selected_table = getUserSelection(possible_tables_l, null, "What is the target to attach the tag?");
+                String selected_property_table = selected_table + "2tags";
+                HashMap<String, String> overide_map = new HashMap<String, String>();
+
+                int name_length = 32;
+                if (path.length() - name_length < 0) {
+                    name_length = 0;
+                }
+                overide_map.put("COLUMN=" + selected_property_table + ".link_to_feature", final_ref);
+                overide_map.put("COLUMN=" + selected_property_table + ".name", path.substring(path.length() - name_length, path.length()).replaceAll("\\s", "_").replaceAll(">", "_").replaceAll("=", "") + "_" + final_ref);
+                String ans = getuserInputSameLine("Type a short description and press enter, type NA or just press enter to describe this later.", "Description: ");
+                if (ans == null || ans.trim().isEmpty() || ans.trim().equalsIgnoreCase("NA")) {
+                    ans = " <add your discription here>";
+                }
+
+                overide_map.put("COLUMN=" + selected_property_table + ".description", path + " " + ans);
+                overide_map.put("name", final_ref);
+                overide_map.put(selected_property_table + ".link_to_feature", final_ref);
+                overide_map.put(selected_property_table + ".name", path.substring(path.length() - name_length, path.length()).replaceAll("\\s", "_").replaceAll(">", "_").replaceAll("=", "") + "_" + final_ref);
+                overide_map.put(selected_property_table + ".description", path + " " + ans);
+
+                possible_tables_l.clear();
+                possible_tables_l.add("Yes, perform a search now");
+                possible_tables_l.add("Do not search. (Add the " + selected_table + " values manually)");
+                String user_selection_do_search = getUserSelection(possible_tables_l, null, "Do you want to search and add the " + selected_table + " now ?");
+                HashMap<String, ArrayList<String>> fromsearch_map = new HashMap<String, ArrayList<String>>();
+                if (user_selection_do_search.equals("Yes, perform a search now")) {
+                    boolean exit_search = false;
+                    while (!exit_search) {
+                        String seach_term = getuserInputSameLine("Enter the name/names of the " + selected_table, "Search for: ");
+                        List search_results_l = advancedQueryHandler(selected_table + ".name=" + seach_term, selected_table + ".name", false, false, false, false, false, false);
+                        if (search_results_l == null || search_results_l.isEmpty()) {
+                            if (!getuserInputSameLine("No match for  " + seach_term + " Do you want to search with a nother term ", " Y (search again) | N (do not search) ").equalsIgnoreCase("Y")) {
+                                exit_search = true;
+                            }
+                        } else {
+                            fromsearch_map.put(selected_table + ".name", new ArrayList<String>(search_results_l));
+                            exit_search = true;
+                        }
+                    }
+                } else {
+
+                    fromsearch_map.put(selected_table + ".name", new ArrayList<String>(Arrays.asList(new String[]{"NA"})));
+                }
+                prepareTemplate(selected_property_table, dir_for_placing_prep_files, false, false, overide_map, fromsearch_map);
+            } else {
+                System.out.println("Error 75B: Communication failer. Can not connect to server.");
+            }
+        } else {
+            System.out.println("Error 75A: Communication failer. Can not connect to server.");
+        }
+    }
+
